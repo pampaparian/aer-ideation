@@ -1,18 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import type { IdeaNode } from '@/lib/types'
 import styles from './Receipt.module.css'
 
-interface Props {
-  root: IdeaNode
-  path: IdeaNode[]
-  thing: string
-  onBack: () => void
-  onReset: () => void
-}
-
-const KIND_LABELS: Record<string, string> = {
+const KIND_SE: Record<string, string> = {
   root: 'ursprung',
   mutation: 'mutation',
   symbiosis: 'symbios',
@@ -22,155 +14,126 @@ const KIND_LABELS: Record<string, string> = {
   emergence: 'emergens',
 }
 
-// Deterministic barcode pattern (avoids hydration mismatch)
-const BARCODE = [
-  1,0.9,1,0.2,1,1,0.3,1,0.8,1,0.2,1,
-  1,0.4,1,1,0.9,0.2,1,1,0.5,1,0.2,1,
-  1,1,0.3,1,0.8,1,0.2,1,1,0.6,1,0.2,
-  1,0.9,1,0.3,1,1,0.2,1,0.8,1,0.4,1,
-]
-const BAR_WIDTHS = [1,1,2,1,1,1,2,1,1,1,1,2,1,1,2,1,1,1,2,1,1,1,1,2,1,1,1,2,1,1,1,1,2,1,1,1,2,1,1,1,1,2,1,1,2,1,1,1]
+interface Props {
+  path: IdeaNode[]
+  thing: string
+  onBack: () => void
+  onReset: () => void
+}
 
-export default function Receipt({ root, path, thing, onBack, onReset }: Props) {
-  const [exported, setExported] = useState(false)
-  const [exporting, setExporting] = useState(false)
+export default function Receipt({ path, thing, onBack, onReset }: Props) {
+  const [exportState, setExportState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
 
-  const timestamp = useMemo(() => {
-    return new Date().toISOString().slice(0, 19).replace('T', ' ')
-  }, [])
+  const timestamp = new Date()
+    .toISOString()
+    .replace('T', ' ')
+    .slice(0, 16)
 
-  const chain = useMemo(() => [root, ...path], [root, path])
+  const derivationId = `AER-${Date.now().toString(36).toUpperCase()}`
 
-  async function handlePaydayExport() {
-    setExporting(true)
+  async function handleExportToPayday() {
+    setExportState('sending')
     const payload = {
-      id: crypto.randomUUID(),
-      source: 'aer-ideation',
-      slot: '03',
-      createdAt: new Date().toISOString(),
+      derivationId,
       thing,
-      chain: chain.map(n => ({
+      path: path.map(n => ({
         id: n.id,
         label: n.label,
         kind: n.kind,
         description: n.description,
         depth: n.depth,
       })),
+      timestamp: new Date().toISOString(),
+      source: 'aer-ideation',
       status: 'pending',
     }
-
+    // Persist locally so Payday can read when built
     try {
-      // Stub endpoint — replace with Aer Payday (Slot 05) API when built
-      await fetch('/api/payday-export', {
+      const existing: unknown[] = JSON.parse(
+        localStorage.getItem('aer:payday:inbox') ?? '[]'
+      )
+      existing.push(payload)
+      localStorage.setItem('aer:payday:inbox', JSON.stringify(existing))
+    } catch {}
+    // POST to API stub (will be live when Payday is built)
+    try {
+      await fetch('/api/payday/inbox', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-    } catch (_) {
-      // Graceful fail — localStorage is the source of truth until Payday exists
-    }
-
-    // Client-side inbox — persists until Aer Payday is built
-    const existing = JSON.parse(
-      (typeof window !== 'undefined' && localStorage.getItem('aer-payday-inbox')) || '[]'
-    )
-    localStorage.setItem('aer-payday-inbox', JSON.stringify([...existing, payload]))
-
-    setExporting(false)
-    setExported(true)
+    } catch {}
+    setExportState('done')
   }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.receipt}>
 
-        <div className={styles.topMeta}>
-          <span className={styles.slotTag}>ÆR · SLOT 03</span>
-          <span className={styles.ts}>{timestamp}</span>
+        <div className={styles.header}>
+          <span className={styles.headerLabel}>H\u00c4RLEDD ID\u00c9V\u00c4G</span>
+          <span className={styles.headerTs}>{timestamp}</span>
         </div>
 
-        <div className={styles.titleRow}>
-          <span className={styles.receiptTitle}>RECEPT</span>
-          <span className={styles.receiptSub}>innovationsbiologi</span>
-        </div>
-
-        <div className={styles.divider} />
-
-        <div className={styles.section}>
-          <span className={styles.sectionLabel}>GREJ</span>
-          <span className={styles.grej}>{thing}</span>
-        </div>
-
-        <div className={styles.divider} />
-
-        <div className={styles.section}>
-          <span className={styles.sectionLabel}>HÄRLEDNING</span>
-          <div className={styles.derivation}>
-            {chain.map((node, i) => (
-              <span key={node.id} className={styles.derivStep}>
-                {i > 0 && <span className={styles.derivArrow}>→</span>}
-                <span className={styles.derivKind}>{KIND_LABELS[node.kind]}</span>
-                <span className={styles.derivLabel}>{node.label}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.divider} />
-
-        <div className={styles.steps}>
-          {chain.map((node, i) => (
-            <div key={node.id} className={styles.step}>
-              <span className={styles.stepNum}>{String(i + 1).padStart(2, '0')}</span>
-              <div className={styles.stepContent}>
-                <span className={styles.stepKind}>{KIND_LABELS[node.kind]}</span>
-                <span className={styles.stepLabel}>{node.label}</span>
-                <span className={styles.stepDesc}>{node.description}</span>
+        <div className={styles.chain}>
+          {path.map((node, i) => {
+            const isFinal = i === path.length - 1
+            return (
+              <div
+                key={node.id}
+                className={`${styles.step} ${isFinal ? styles.stepFinal : ''}`}
+              >
+                <div className={styles.stepLeft}>
+                  <span className={styles.stepNum}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!isFinal && <div className={styles.stepConnector} />}
+                </div>
+                <div className={styles.stepRight}>
+                  <span className={styles.stepKind}>
+                    {KIND_SE[node.kind] ?? node.kind}
+                  </span>
+                  <span className={styles.stepLabel}>{node.label}</span>
+                  <span className={styles.stepDesc}>{node.description}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        <div className={styles.divider} />
-
-        <div className={styles.barcode}>
-          {BARCODE.map((opacity, i) => (
-            <span
-              key={i}
-              className={styles.bar}
-              style={{
-                opacity,
-                width: `${BAR_WIDTHS[i] ?? 1}px`,
-              }}
-            />
-          ))}
+        <div className={styles.seal}>
+          <div className={styles.sealRule} />
+          <span className={styles.sealText}>
+            \u00c6R IDEATION \u00b7 {thing.toUpperCase()} \u00b7 {derivationId}
+          </span>
+          <div className={styles.sealRule} />
         </div>
-
-        <div className={styles.stamp}>
-          ÆR IDEATION · SLOT 03 · BEKRÄFTAT
-        </div>
-
-        <div className={styles.divider} />
 
         <div className={styles.actions}>
           <button
-            className={`${styles.payBtn} ${exported ? styles.payBtnDone : ''}`}
-            onClick={handlePaydayExport}
-            disabled={exported || exporting}
+            className={`${styles.exportBtn} ${
+              exportState === 'done' ? styles.exportBtnDone : ''
+            }`}
+            onClick={handleExportToPayday}
+            disabled={exportState !== 'idle'}
           >
-            {exporting
-              ? '···'
-              : exported
-              ? '✓ skickat till ær payday'
-              : 'exportera till ær payday →'}
+            {exportState === 'idle' && 'Exportera till \u00c6r Payday'}
+            {exportState === 'sending' && '\u00b7\u00b7\u00b7'}
+            {exportState === 'done' &&
+              '\u2713 \u00d6verf\u00f6rt till \u00c6r Payday'}
+            {exportState === 'error' && '\u00d7 Misslyckades'}
           </button>
 
-          <div className={styles.navRow}>
-            <button className={styles.navBtn} onClick={onBack}>← tillbaka</button>
-            <button className={styles.navBtn} onClick={onReset}>× ny grej</button>
+          <div className={styles.secondaryActions}>
+            <button className={styles.secondaryBtn} onClick={onBack}>
+              \u2190 \u00e4ndra val
+            </button>
+            <span className={styles.secondaryDivider} />
+            <button className={styles.secondaryBtn} onClick={onReset}>
+              ny id\u00e9
+            </button>
           </div>
         </div>
-
       </div>
     </div>
   )

@@ -1,256 +1,211 @@
 .wrap {
   flex: 1;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
-  padding: 32px 20px 48px;
-  background: #f7f6f2;
+  padding: 40px 24px 60px;
 }
 
 .receipt {
-  background: #fdfcf9;
-  border: 0.5px solid rgba(0,0,0,0.12);
   width: 100%;
-  max-width: 380px;
-  padding: 24px 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  max-width: 480px;
+  background: #fff;
+  border: 0.5px solid rgba(0,0,0,0.18);
+  padding: 28px 28px 24px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
-/* Top meta */
-.topMeta {
+/* Header */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 18px;
-}
-
-.slotTag {
-  font-size: 7px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,0.3);
-  font-weight: 500;
-}
-
-.ts {
-  font-size: 7px;
-  letter-spacing: 0.06em;
-  color: rgba(0,0,0,0.2);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Title */
-.titleRow {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
   margin-bottom: 20px;
 }
 
-.receiptTitle {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.28em;
-  color: #0a0a0a;
-}
-
-.receiptSub {
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  color: rgba(0,0,0,0.3);
-  font-style: italic;
-}
-
-/* Divider */
-.divider {
-  height: 0;
-  border-top: 0.5px solid rgba(0,0,0,0.1);
-  margin: 16px 0;
-}
-
-/* Sections */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.sectionLabel {
+.headerLabel {
   font-size: 7px;
+  font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.28);
-  font-weight: 500;
+  color: rgba(0,0,0,0.3);
 }
 
-.grej {
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: #0a0a0a;
-  line-height: 1.2;
-}
-
-/* Derivation chain */
-.derivation {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-
-.derivStep {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.derivArrow {
+.headerTs {
   font-size: 8px;
-  color: rgba(0,0,0,0.2);
-  margin-right: 2px;
+  color: rgba(0,0,0,0.22);
+  letter-spacing: 0.06em;
 }
 
-.derivKind {
-  font-size: 7px;
-  letter-spacing: 0.12em;
-  color: rgba(0,0,0,0.28);
-  text-transform: uppercase;
-}
-
-.derivLabel {
-  font-size: 9px;
-  font-weight: 500;
-  color: #0a0a0a;
-  letter-spacing: 0.02em;
-}
-
-/* Steps */
-.steps {
+/* Chain */
+.chain {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .step {
-  display: grid;
-  grid-template-columns: 20px 1fr;
-  gap: 10px;
-  align-items: start;
+  display: flex;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+}
+
+.step:first-child {
+  border-top: 0.5px solid rgba(0,0,0,0.06);
+}
+
+.stepFinal {
+  padding: 13px 10px;
+  margin: 6px -10px 0;
+  border: 0.5px solid rgba(0,0,0,0.14) !important;
+  background: rgba(0,0,0,0.012);
+}
+
+.stepLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 18px;
+  flex-shrink: 0;
 }
 
 .stepNum {
-  font-size: 7px;
-  letter-spacing: 0.08em;
-  color: rgba(0,0,0,0.2);
-  padding-top: 3px;
-  font-variant-numeric: tabular-nums;
+  font-size: 7.5px;
+  color: rgba(0,0,0,0.18);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  margin-top: 2px;
 }
 
-.stepContent {
+.stepConnector {
+  width: 0.5px;
+  flex: 1;
+  background: rgba(0,0,0,0.1);
+  margin-top: 5px;
+  min-height: 12px;
+}
+
+.stepRight {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  flex: 1;
 }
 
 .stepKind {
   font-size: 7px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,0.28);
   font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.25);
 }
 
 .stepLabel {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
-  color: #0a0a0a;
-  letter-spacing: 0.01em;
+  color: #000;
+  letter-spacing: 0.005em;
+  line-height: 1.2;
+}
+
+.stepFinal .stepLabel {
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .stepDesc {
-  font-size: 8px;
-  color: rgba(0,0,0,0.4);
+  font-size: 9px;
+  color: rgba(0,0,0,0.38);
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.5;
   letter-spacing: 0.01em;
 }
 
-/* Barcode */
-.barcode {
+/* Seal */
+.seal {
   display: flex;
-  align-items: stretch;
-  height: 28px;
-  gap: 1.5px;
-  margin: 4px 0;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 20px;
 }
 
-.bar {
-  display: block;
-  background: #0a0a0a;
-  height: 100%;
-  flex-shrink: 0;
+.sealRule {
+  flex: 1;
+  height: 0.5px;
+  background: rgba(0,0,0,0.1);
 }
 
-/* Stamp */
-.stamp {
-  font-size: 6px;
-  letter-spacing: 0.22em;
+.sealText {
+  font-size: 6.5px;
+  letter-spacing: 0.18em;
+  color: rgba(0,0,0,0.18);
+  white-space: nowrap;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.2);
-  text-align: center;
-  margin-top: 6px;
-  margin-bottom: 2px;
 }
 
 /* Actions */
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 10px;
 }
 
-.payBtn {
-  background: #0a0a0a;
-  color: #f7f6f2;
+.exportBtn {
+  width: 100%;
+  padding: 11px 0;
+  background: #000;
+  color: #fff;
   border: none;
   cursor: pointer;
   font-family: inherit;
   font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: lowercase;
-  padding: 11px 16px;
-  transition: opacity 100ms;
-  width: 100%;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: opacity 120ms;
 }
 
-.payBtn:hover:not(:disabled) { opacity: 0.75; }
-.payBtn:disabled { cursor: default; }
-
-.payBtnDone {
-  background: rgba(0,0,0,0.08);
-  color: rgba(0,0,0,0.4);
+.exportBtn:hover:not(:disabled) {
+  opacity: 0.72;
 }
 
-.navRow {
+.exportBtn:disabled {
+  cursor: default;
+}
+
+.exportBtnDone {
+  background: rgba(0,0,0,0.05);
+  color: rgba(0,0,0,0.35);
+}
+
+.secondaryActions {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
 }
 
-.navBtn {
+.secondaryBtn {
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
   font-size: 9px;
   letter-spacing: 0.1em;
-  color: rgba(0,0,0,0.35);
-  padding: 0;
+  color: rgba(0,0,0,0.28);
+  padding: 4px 0;
   transition: color 100ms;
 }
 
-.navBtn:hover { color: #0a0a0a; }
+.secondaryBtn:hover {
+  color: #000;
+}
+
+.secondaryDivider {
+  width: 0.5px;
+  height: 10px;
+  background: rgba(0,0,0,0.15);
+}
