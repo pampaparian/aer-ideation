@@ -9,13 +9,12 @@ function stripMarkdown(raw: string): string {
   return raw.replace(/^```json[\s\S]*?\n/i,'').replace(/^```\s*\n/i,'').replace(/\n?```\s*$/i,'').trim()
 }
 
-// Fallback: standalone labels, never references parentLabel
 function fallbackChildren(parentId: string, depth: number): IdeaNode[] {
   const defs: Array<{ kind: NodeKind; label: string; desc: string }> = [
-    { kind: 'mutation',   label: 'Digital edition',    desc: 'Digital version med högt distributionsvärde' },
-    { kind: 'symbiosis',  label: 'Kollaborationsprojekt', desc: 'Samarbete med komplementär konstnär eller aktivör' },
-    { kind: 'adaptation', label: 'Prenumerationsmodell', desc: 'Recurring intäkt via abonnentbas' },
-    { kind: 'emergence',  label: 'AI-driven plattform', desc: 'Ny kategori uppstår via intelligent motor' },
+    { kind: 'mutation',   label: 'Digital edition',       desc: 'Digital version med högt distributionsvärde' },
+    { kind: 'symbiosis',  label: 'Kollaborationsprojekt', desc: 'Samarbete med komplementär konstnär' },
+    { kind: 'adaptation', label: 'Prenumerationsmodell',  desc: 'Recurring intäkt via abonnentbas' },
+    { kind: 'emergence',  label: 'AI-driven plattform',   desc: 'Ny kategori uppstår via intelligent motor' },
   ]
   return defs.map((d, i) => ({
     id: `${parentId}_${i+1}`, label: d.label, description: d.desc,
@@ -24,26 +23,47 @@ function fallbackChildren(parentId: string, depth: number): IdeaNode[] {
 }
 
 export async function POST(req: NextRequest) {
-  const { rootThing, parentId, parentLabel, parentKind, parentDescription, depth } = await req.json()
+  const {
+    rootThing, parentId, parentLabel, parentKind, parentDescription, depth,
+    pathChain,  // PathNode[]: full derivation chain from root to this node
+    siblings,   // string[]: sibling labels NOT selected at this level
+  } = await req.json()
+
   if (!parentLabel || !parentId)
     return NextResponse.json({ error: 'Saknar parentLabel/parentId' }, { status: 400 })
+
   const newDepth = (depth ?? 1) + 1
+
   if (!GOOGLE_GENERATIVE_AI_API_KEY) {
     console.error('split: API-nyckel saknas')
     return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) })
   }
 
+  // Build context string from path chain
+  const chainLabels: string[] = pathChain?.map((n: { label: string }) => n.label) ?? []
+  const pathContext = chainLabels.length > 1
+    ? `\nKONTEXTKEDJA (hela tankekedjan hittills — generera INTE liknande begrepp):\n${rootThing} \u2192 ${chainLabels.join(' \u2192 ')}\n`
+    : ''
+
+  const siblingsContext = siblings && siblings.length > 0
+    ? `\nUNDVIK DESSA (redan genererade vid detta steg):\n${(siblings as string[]).join(', ')}\n`
+    : ''
+
+  const deepContext = newDepth >= 3
+    ? `\nDJUP ${newDepth}: Konceptet är nu smalt och specifikt. Generera alternativa FORMAT, KANALER eller AFFÄRSMODELLER kring detta begrepp — inte fler sub-typer. Välj riktningar som divergerar BORT från redan utforskade grenar.\n`
+    : ''
+
   const systemPrompt = `Du är ett innovationssystem inbyggt i David Stenbecks personliga idéverktyg Ær Ideation.
 
-PERSONA — DU AGERAR SOM EN FÖRLÄNGNING AV DAVIDS BLICK:
-David Stenbeck: svensk digital konstnär (Cinema 4D, @dovneon, 260k+ följare), poet (@ultrahavn).
+PERSONA:
+David Stenbeck: svensk digital konstnär (Cinema 4D, @dovneon, 260k+), poet (@ultrahavn).
 Estetik: minimalism, rymd, litterär tyngd, precision. ULTRAHAVN.
 Domän: digital konst, poesi, AI-verktyg, publikationer, förlagsmodeller, pop-ups, utställningar.
 Om en idé inte känns som något David skulle bygga, publicera eller driva — är den fel.
 
 MISSION:
-Givet ett moderkoncept, generera 4 KONKRETA ALTERNATIVA BEGREPP i samma kategori/domän.
-Tänk: \"Vilka olika format, projekt eller kanaler kan detta bli?\" INTE: \"Hur modifierar jag moderkonceptets namn?\".
+Givet ett moderkoncept, generera 4 KONKRETA ALTERNATIVA BEGREPP som strålar utifrån moderkonceptet.
+Varje klyvning ska producera genuint DIVERGERANDE alternativ — inte varianter av samma tema.
 
 Returnera ENBART rå JSON. Inga backticks, markdown.
 
@@ -55,51 +75,46 @@ Schema:
 {"id":"${parentId}_4","label":"KONKRET NAMN","description":"8 ord","kind":"emergence","depth":${newDepth},"parentId":"${parentId}","children":[]}
 ]}
 
-DAVIDS DEFINITIVA FACIT-KEDJOR (följ exakt denna klyvningsstil):
+DAVIDS FACIT-KEDJOR:
 \"Husbyggnadsbok\" → Digital bok | Prenumerationsmagasin | Workshop-serie | Arkitektur-podcast
-\"DIY (från soffbord)\" → Möbeltidning | Bygginstruktionsplattform | Flatpack-kollaboration | Pop-up workshop
+\"DIY\" → Möbeltidning | Bygginstruktionsplattform | Flatpack-kollaboration | Pop-up workshop
 \"Diktsamling\" → Haikusamling | Elegikatalog | Spoken word-album | Visuell poesi
-\"Serieroman\" → Manga | Graphic novel | Webtoon | Stumfilm-adaptation
-\"AI-verktyg\" → Chatbot-plattform | Bildgenerator | Kodassistent | Dataanalystjänst
 \"Konstbok\" → Signerad limited edition | Open access PDF | Utställningskatalog | Crowdfundad upplaga
 \"Pop-up galleri\" → Residensprogram | Nomadisk utställning | Handelsplats | Kollaborativ installation
+\"AI-verktyg\" → Chatbot | Bildgenerator | Kodassistent | Kunskapsmotor
 
-VALIDERINGSKRITERIER — målet ska vara konceptuellt och strategiskt:
-✓ Publikation, bok, tidskrift, digital release, diktsamling
-✓ AI-verktyg, digital plattform, nischat SaaS för kreativa
-✓ Förlagsmodell, licensiering, prenumerationsintäkt
-✓ Pop-up, installation, utställning, residens
-✓ Spoken word, podcast, radioformat, event-serie
-✕ INTE: generisk SaaS för alla, corporate lösningar
-✕ INTE: granulära fysiska detaljer (\"träben\", \"lackering\", material-specifikationer)
+VALIDERINGSKRITERIER:
+✓ Publikation, bok, tidskrift, digital release
+✓ AI-verktyg, digital plattform
+✓ Förlagsmodell, licensiering, prenumeration
+✓ Pop-up, installation, utställning, event
+✓ Spoken word, podcast, radioformat
+✕ Generisk SaaS, corporate, fysisk massproduktion
+✕ Granulära fysiska detaljer (material, mått, färg)
 
-FINANSIELL NYKTERHET (valideringssteg):
-Trots estetisk styrning — varje idé måste ha en genomförbar intäktsmodell:
-Prenumeration? Licensiering? Försäljning av upplaga? Utställningsarrangör? API-avgift? Konsultuppdrag?
-Beskrivningen (8 ord) ska antyda denna bärighet.
+FINANSIELL NYKTERHET:
+Varije idé måste ha en genomförbar intäktsmodell.
+Prenumeration? Licensiering? UpplageFörsäljning? Utställningsarrangör? API-avgift?
+Description (8 ord) ska antyda bärigheten.
 
-KRITISK REGEL — ANTI-REKURSION:
-1. Label får ALDRIG innehålla moderkonceptets namn eller delar av det.
-2. Aldrig \"[prefix] [moderbegrepp]\" som \"Digital ${parentLabel}\", \"Ny ${parentLabel}\", \"Integrerad ${parentLabel}\".
-3. Varje barn = ett EGET BEGREPP som står på egna ben.
-
-FEW-SHOT FEL (undvik ALLTID):
-\"Diktsamling\" → Digital diktsamling ✗
-\"AI-verktyg\" → Integrerad AI-verktyg ✗
-\"Konstbok\" → Ny konstbok ✗
-
-KATEGORIERNA är sekundära filter:
-- mutation: väsentlig förvandling av formen
-- symbiosis: samverkan med annat system eller person
-- adaptation: anpassad till ny nisch eller kanal
-- emergence: ny egenskap eller kategori uppstår
+ANTI-REKURSION (absolut):
+1. Label får ALDRIG innehålla moderkonceptets namn: \"${parentLabel}\".
+2. Aldrig \"[prefix] ${parentLabel}\" som mönster.
+3. Varje barn = ett eget begrepp på egna ben.
 
 label: 1-4 ord
-description: 8 ord, affärspotential och estetisk riktning tydlig
+description: 8 ord
 children alltid []
 Returnera ENBART giltig JSON`
 
-  const userMsg = `Moderkoncept: \"${parentLabel}\" (${parentKind}: ${parentDescription}). Rotkontext: \"${rootThing}\". Generera 4 konkreta alternativa begrepp UTAN att använda \"${parentLabel}\" i något label-fält.`
+  const userMsg = [
+    `Moderkoncept: \"${parentLabel}\" (${parentKind}: ${parentDescription}).`,
+    `Rotkontext: \"${rootThing}\".`,
+    pathContext,
+    siblingsContext,
+    deepContext,
+    `Generera 4 genuint DIVERGERANDE alternativ. Inga labels får innehålla \"${parentLabel}\".`,
+  ].filter(Boolean).join(' ')
 
   try {
     const resp = await fetch(
@@ -110,20 +125,30 @@ Returnera ENBART giltig JSON`
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-          generationConfig: { temperature: 0.9, maxOutputTokens: 1024, responseMimeType: 'application/json' },
+          generationConfig: { temperature: 0.92, maxOutputTokens: 1024, responseMimeType: 'application/json' },
         }),
       }
     )
-    if (!resp.ok) { console.error('split: HTTP', resp.status); return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) }) }
+    if (!resp.ok) {
+      console.error('split: HTTP', resp.status)
+      return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) })
+    }
     const gd = await resp.json()
     const raw = gd?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
     const parsed: { children: IdeaNode[] } = JSON.parse(stripMarkdown(raw))
-    // Sanitization: strip recursive labels
+
+    // Sanitize: strip recursive labels
     const parentLower = parentLabel.toLowerCase()
     const sanitized = parsed.children.map(child => {
       if (child.label.toLowerCase().includes(parentLower)) {
         console.warn(`split: rekursiv label: "${child.label}" (parent: "${parentLabel}")`)
-        return { ...child, label: child.label.replace(new RegExp(parentLabel, 'gi'), '').replace(/\s+/g, ' ').trim() || 'Nytt koncept' }
+        return {
+          ...child,
+          label: child.label
+            .replace(new RegExp(parentLabel, 'gi'), '')
+            .replace(/\s+/g, ' ')
+            .trim() || 'Nytt koncept',
+        }
       }
       return child
     })

@@ -13,6 +13,11 @@ interface HistoryStep {
   selectedChild: IdeaNode
 }
 
+interface PathNode {
+  label: string
+  kind: string
+}
+
 const KIND_SE: Record<string, string> = {
   root: 'ursprung',
   mutation: 'mutation',
@@ -23,7 +28,6 @@ const KIND_SE: Record<string, string> = {
   emergence: 'emergens',
 }
 
-// Radial fan angles in degrees (0° = right horizontal)
 function fanAngles(n: number): number[] {
   if (n <= 1) return [0]
   const spread = n === 2 ? 22 : n === 3 ? 30 : n === 4 ? 38 : 44
@@ -32,7 +36,7 @@ function fanAngles(n: number): number[] {
   )
 }
 
-const RADIUS = 215 // px from nucleus edge to child label
+const RADIUS = 215
 
 function pause(ms: number) {
   return new Promise<void>(r => setTimeout(r, ms))
@@ -54,9 +58,7 @@ export default function Home() {
   const derivationPath: IdeaNode[] =
     history.length > 0
       ? [history[0].focusNode, ...history.map(s => s.selectedChild)]
-      : currentNode
-      ? [currentNode]
-      : []
+      : currentNode ? [currentNode] : []
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -87,16 +89,35 @@ export default function Home() {
 
   async function handleSelect(child: IdeaNode) {
     if (!currentNode || !children || exiting) return
-    // 1. Slide nucleus left + fade
+
+    // Compute full path chain BEFORE state updates (history still reflects old state)
+    const pathChain: PathNode[] = [
+      ...(history.length > 0
+        ? [
+            { label: history[0].focusNode.label, kind: history[0].focusNode.kind },
+            ...history.map(s => ({ label: s.selectedChild.label, kind: s.selectedChild.kind })),
+          ]
+        : [{ label: currentNode.label, kind: currentNode.kind }]
+      ),
+      { label: child.label, kind: child.kind },
+    ]
+
+    // Siblings NOT selected — helps Gemini avoid re-generating them
+    const siblings = children
+      .filter(c => c.id !== child.id)
+      .map(c => c.label)
+
+    // Slide nucleus out
     setExiting(true)
     await pause(210)
-    // 2. Swap state (all batched in React 18)
     setExiting(false)
+
+    // Swap state
     setHistory(prev => [...prev, { focusNode: currentNode, children, selectedChild: child }])
     setCurrentNode(child)
     setChildren(null)
     setPhase('splitting')
-    // 3. Fetch new children
+
     try {
       const res = await fetch('/api/split', {
         method: 'POST',
@@ -108,6 +129,8 @@ export default function Home() {
           parentKind: child.kind,
           parentDescription: child.description,
           depth: child.depth,
+          pathChain,   // full derivation chain for context
+          siblings,    // already-seen alternatives to avoid
         }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -164,7 +187,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ─ INPUT ─ */}
       {phase === 'input' && (
         <div className={styles.inputStage}>
           <form onSubmit={handleSubmit}>
@@ -186,20 +208,17 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─ LOADING ─ */}
       {phase === 'loading' && (
         <div className={styles.centerStage}>
           <span className={styles.pulseDot} />
         </div>
       )}
 
-      {/* ─ SPATIAL VIEW ─ */}
       {(phase === 'viewing' || phase === 'splitting') && currentNode && (
         <div className={styles.arena}>
 
-          {/* Clickable trail — faded, physically represents the path leftwards */}
           {history.length > 0 && (
-            <nav className={styles.trail} aria-label="Tankekedja">
+            <nav className={styles.trail}>
               {history.map((step, i) => (
                 <span key={step.focusNode.id} className={styles.trailItem}>
                   <button
@@ -215,10 +234,8 @@ export default function Home() {
             </nav>
           )}
 
-          {/* Horizontal node row */}
           <div className={styles.nodeRow}>
 
-            {/* NUCLEUS — re-keyed so nucleusIn triggers on each new node */}
             <div
               key={currentNode.id}
               className={`${styles.nucleus} ${exiting ? styles.nucleusExiting : ''}`}
@@ -230,41 +247,28 @@ export default function Home() {
               <span className={styles.nucleusDesc}>{currentNode.description}</span>
             </div>
 
-            {/* Stem hairline */}
             {(children !== null || phase === 'splitting') && (
               <div className={styles.stemRight} />
             )}
 
-            {/* Splitting indicator */}
             {phase === 'splitting' && (
               <span className={styles.splittingText}>klyver</span>
             )}
 
-            {/* RADIAL CHILDREN */}
             {phase === 'viewing' && children && children.length > 0 && (
               <div className={styles.radialHost}>
-
-                {/* 0.25px hairlines via SVG */}
                 <svg
-                  width={0}
-                  height={0}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    overflow: 'visible',
-                    pointerEvents: 'none',
-                  }}
+                  width={0} height={0}
+                  style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none' }}
                 >
                   {angles.map((deg, i) => {
                     const rad = (deg * Math.PI) / 180
-                    const x2 = RADIUS * Math.cos(rad)
-                    const y2 = RADIUS * Math.sin(rad)
                     return (
                       <line
                         key={i}
                         x1={0} y1={0}
-                        x2={x2} y2={y2}
+                        x2={RADIUS * Math.cos(rad)}
+                        y2={RADIUS * Math.sin(rad)}
                         stroke="rgba(0,0,0,0.16)"
                         strokeWidth="0.25"
                       />
@@ -272,7 +276,6 @@ export default function Home() {
                   })}
                 </svg>
 
-                {/* Child node buttons — radially positioned */}
                 {children.map((child, i) => {
                   const rad = (angles[i] * Math.PI) / 180
                   const x = RADIUS * Math.cos(rad)
@@ -295,13 +298,11 @@ export default function Home() {
                     </button>
                   )
                 })}
-
               </div>
             )}
 
-          </div>{/* /nodeRow */}
+          </div>
 
-          {/* Receipt trigger — unlocked at depth ≥2 */}
           {canReceipt && (
             <div className={styles.receiptRow}>
               <button className={styles.receiptBtn} onClick={() => setPhase('receipt')}>
@@ -313,7 +314,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─ RECEIPT ─ */}
       {phase === 'receipt' && (
         <Receipt
           path={derivationPath}
