@@ -5,54 +5,66 @@ export const runtime = 'edge'
 
 const GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
-// Generates root + depth-1 children only.
-// Depth-2+ is generated on demand via /api/split.
-const SYSTEM_PROMPT = `Du är en motor för innovationsbiologi. Givet en 'grej', generera ett rotobjekt med exakt 5 barn.
+const SYSTEM_PROMPT = `Du är en motor för innovationsbiologi. Givet en 'grej', generera rotobjekt med exakt 5 barn.
 
-Returnera ENBART rå JSON. Inga markdown-block, inga backticks, inga förklaringar.
+Returnera ENBART rå JSON. Inga backticks, inga markdown, inga förklaringar.
 
 Schema:
 {"root":{"id":"root","label":"GREJEN","description":"8 ord","kind":"root","depth":0,"parentId":null,"children":[
-{"id":"n1","label":"SPECIFIKT NAMN","description":"8 ord konkret","kind":"mutation","depth":1,"parentId":"root","children":[]},
-{"id":"n2","label":"SPECIFIKT NAMN","description":"8 ord konkret","kind":"symbiosis","depth":1,"parentId":"root","children":[]},
-{"id":"n3","label":"SPECIFIKT NAMN","description":"8 ord konkret","kind":"parasite","depth":1,"parentId":"root","children":[]},
-{"id":"n4","label":"SPECIFIKT NAMN","description":"8 ord konkret","kind":"adaptation","depth":1,"parentId":"root","children":[]},
-{"id":"n5","label":"SPECIFIKT NAMN","description":"8 ord konkret","kind":"emergence","depth":1,"parentId":"root","children":[]}
+{"id":"n1","label":"SPECIFIKT NAMN","description":"8 ord","kind":"mutation","depth":1,"parentId":"root","children":[]},
+{"id":"n2","label":"SPECIFIKT NAMN","description":"8 ord","kind":"symbiosis","depth":1,"parentId":"root","children":[]},
+{"id":"n3","label":"SPECIFIKT NAMN","description":"8 ord","kind":"parasite","depth":1,"parentId":"root","children":[]},
+{"id":"n4","label":"SPECIFIKT NAMN","description":"8 ord","kind":"adaptation","depth":1,"parentId":"root","children":[]},
+{"id":"n5","label":"SPECIFIKT NAMN","description":"8 ord","kind":"emergence","depth":1,"parentId":"root","children":[]}
 ]}}
 
-VIKTIGT — label-regler:
-- Skriv det specifika begreppets faktiska namn, INTE "mutation av X" eller "X-variant"
-- Exempel om input är "bok": Diktsamling, Lärobok, Serieroman, Kokbok, Självbiografi
-- Exempel om input är "stol": Hammock, Kontorsstol, Gungestol, Sadel, Hängmatta
-- Exempel om input är "musik": Vaggsång, Protestsång, Opera, Remixalbum, Improvisationsjazz
-- Exempel om input är "hus": Herrgård, Nomadtält, Trädkoja, Flytande hem, Underjordsbunker
-- label: 1-4 ord, specifikt och konkret
-- description: exakt 8 ord, beskriver vad det är
-- children alltid []
-- Returnera ENBART giltig JSON`
+LABEL-REGLER — absolut tvångsbindande:
+Label ska vara det specifika konceptets RIKTIGA NAMN. Aldrig ett prefix + originalkonceptet.
+
+Korrekt: Diktsamling, Lärobok, Serieroman, Kokbok, Självbiografi
+Fel: Mutation av bok, Symbios av bok, Bok-variant, Adaptation av bok
+
+Fler exempel:
+- Input "stol" → Hammock, Kontorsstol, Gungestol, Pall, Hängmatta
+- Input "hus" → Herrgard, Nomadtält, Trädkoja, Flytande hem, Bunker
+- Input "musik" → Vaggsång, Protestsång, Opera, Remixalbum, Fri jazz
+- Input "film" → Dokumentar, Animationsfilm, Tyst film, Kortfilm, Hemvideo
+
+ABSOLUT FÖRBJUDET i label-fältet:
+· frasen "mutation av"
+· frasen "symbios av"
+· frasen "adaptation av"
+· frasen "parasit av"
+· frasen "emergens av"
+· suffix " variant" eller " form"
+· originalkonceptets namn som suffix
+
+description: exakt 8 ord, konkret och specifik
+children alltid []
+Returnera ENBART giltig JSON`
+
+const KIND_NAMES: Record<string, string[]> = {
+  mutation:   ['Omformad', 'Förändrad', 'Omvandlad'],
+  symbiosis:  ['Förenad', 'Samverkan', 'Hållbar'],
+  parasite:   ['Béroende', 'Utnyttjad', 'Parasitisk'],
+  adaptation: ['Anpassad', 'Skalbar', 'Flexibel'],
+  extinction: ['Utdöd', 'Försvunnen', 'Obsolet'],
+  emergence:  ['Framväxande', 'Ny', 'Latent'],
+}
 
 function fallbackRoot(thing: string): IdeaNode {
   const kinds: NodeKind[] = ['mutation', 'symbiosis', 'parasite', 'adaptation', 'emergence']
-  const examples: Record<NodeKind, string> = {
-    root: thing,
-    mutation: 'förändrad form',
-    symbiosis: 'samlevnad med annat',
-    parasite: 'lever på sin värd',
-    adaptation: 'anpassad version',
-    extinction: 'utdöd form',
-    emergence: 'ny egenskap uppstår',
-  }
   return {
     id: 'root',
     label: thing,
-    description: `Ursprungskonceptet: ${thing}`,
+    description: `Ursprungskonceptet för utforskning`,
     kind: 'root',
     depth: 0,
     parentId: null,
     children: kinds.map((kind, i) => ({
       id: `n${i + 1}`,
-      label: `${kind} av ${thing}`,
-      description: examples[kind],
+      label: `${KIND_NAMES[kind]?.[0] ?? kind} ${thing}`,
+      description: `En ${kind}-derivat av ursprungskonceptet`,
       kind,
       depth: 1,
       parentId: 'root',
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!GOOGLE_GENERATIVE_AI_API_KEY) {
-    console.error('ideate: GOOGLE_GENERATIVE_AI_API_KEY saknas')
+    console.error('ideate: API-nyckel saknas')
     return NextResponse.json({ root: fallbackRoot(thing) })
   }
 
@@ -97,18 +109,13 @@ export async function POST(req: NextRequest) {
         }),
       }
     )
-
     if (!response.ok) {
-      const err = await response.text()
-      console.error('ideate: Gemini HTTP', response.status, '-', err)
+      console.error('ideate: Gemini HTTP', response.status)
       return NextResponse.json({ root: fallbackRoot(thing) })
     }
-
     const geminiData = await response.json()
     const raw = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    console.log('ideate: raw length', raw.length)
-    const cleaned = stripMarkdown(raw)
-    const parsed = JSON.parse(cleaned)
+    const parsed = JSON.parse(stripMarkdown(raw))
     return NextResponse.json(parsed)
   } catch (err) {
     console.error('ideate: fel -', err)

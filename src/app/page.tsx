@@ -32,11 +32,9 @@ export default function Home() {
   const [currentNode, setCurrentNode] = useState<IdeaNode | null>(null)
   const [children, setChildren] = useState<IdeaNode[] | null>(null)
 
-  // Receipt is only available after navigating >=2 levels
   const canReceipt = history.length >= 2 && phase === 'viewing'
   const canGoBack = history.length > 0 || phase === 'receipt'
 
-  // Derivation path for receipt: root + all selected children
   const derivationPath: IdeaNode[] =
     history.length > 0
       ? [history[0].focusNode, ...history.map(s => s.selectedChild)]
@@ -62,10 +60,8 @@ export default function Home() {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      const root: IdeaNode = data.root
-      setCurrentNode(root)
-      // children stored at depth 1 inside root
-      setChildren(root.children)
+      setCurrentNode(data.root)
+      setChildren(data.root.children)
       setPhase('viewing')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'okänt fel')
@@ -75,13 +71,7 @@ export default function Home() {
 
   async function handleSelect(child: IdeaNode) {
     if (!currentNode || !children) return
-    // Save current state to history before navigating
-    const newStep: HistoryStep = {
-      focusNode: currentNode,
-      children,
-      selectedChild: child,
-    }
-    setHistory(prev => [...prev, newStep])
+    setHistory(prev => [...prev, { focusNode: currentNode, children, selectedChild: child }])
     setCurrentNode(child)
     setChildren(null)
     setPhase('splitting')
@@ -117,14 +107,8 @@ export default function Home() {
   }
 
   function handleBack() {
-    if (phase === 'receipt') {
-      setPhase('viewing')
-      return
-    }
-    if (history.length === 0) {
-      setPhase('input')
-      return
-    }
+    if (phase === 'receipt') { setPhase('viewing'); return }
+    if (history.length === 0) { setPhase('input'); return }
     handleBackTo(history.length - 1)
   }
 
@@ -140,6 +124,7 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
+
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.wordmark}>ÆR IDEATION</span>
@@ -147,19 +132,15 @@ export default function Home() {
         </div>
         <div className={styles.headerRight}>
           {canGoBack && (
-            <button className={styles.navBtn} onClick={handleBack}>
-              ← tillbaka
-            </button>
+            <button className={styles.navBtn} onClick={handleBack}>← tillbaka</button>
           )}
           {phase !== 'input' && phase !== 'loading' && (
-            <button className={styles.navBtn} onClick={handleReset}>
-              × ny idé
-            </button>
+            <button className={styles.navBtn} onClick={handleReset}>× ny idé</button>
           )}
         </div>
       </header>
 
-      {/* ── INPUT ── */}
+      {/* ─ INPUT ─ */}
       {phase === 'input' && (
         <div className={styles.inputStage}>
           <form onSubmit={handleSubmit}>
@@ -176,7 +157,6 @@ export default function Home() {
                 className={styles.submitBtn}
                 type="submit"
                 disabled={!inputVal.trim()}
-                aria-label="Skicka"
               >
                 →
               </button>
@@ -186,73 +166,82 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── LOADING ── */}
+      {/* ─ LOADING ─ */}
       {phase === 'loading' && (
         <div className={styles.centerStage}>
           <span className={styles.pulseDot} />
         </div>
       )}
 
-      {/* ── VIEWING / SPLITTING ── */}
+      {/* ─ SPATIAL NODE VIEW ─ */}
       {(phase === 'viewing' || phase === 'splitting') && currentNode && (
         <div className={styles.arena}>
 
-          {/* Trail — clickable breadcrumb */}
+          {/* Breadcrumb trail: faded, above nucleus */}
           {history.length > 0 && (
             <div className={styles.trail}>
               {history.map((step, i) => (
-                <button
-                  key={step.focusNode.id}
-                  className={styles.trailBtn}
-                  onClick={() => handleBackTo(i)}
-                >
-                  {step.focusNode.label}
+                <span key={step.focusNode.id} className={styles.trailItem}>
+                  <button
+                    className={styles.trailBtn}
+                    onClick={() => handleBackTo(i)}
+                  >
+                    {step.focusNode.label}
+                  </button>
                   <span className={styles.trailSep}>→</span>
-                </button>
+                </span>
               ))}
             </div>
           )}
 
-          {/* Nucleus — re-keyed so animation replays on each navigation */}
-          <div key={currentNode.id} className={styles.nucleus}>
-            <span className={styles.nucleusKind}>
-              {KIND_SE[currentNode.kind] ?? currentNode.kind}
-            </span>
-            <span className={styles.nucleusLabel}>{currentNode.label}</span>
-            <span className={styles.nucleusDesc}>{currentNode.description}</span>
-            {currentNode.depth > 0 && (
-              <span className={styles.nucleusDepth}>djup {currentNode.depth}</span>
+          {/* Horizontal node row: nucleus ——— children */}
+          <div className={styles.nodeRow}>
+
+            {/* Nucleus — re-keyed for slide-in animation */}
+            <div key={currentNode.id} className={styles.nucleus}>
+              <span className={styles.nucleusKind}>
+                {KIND_SE[currentNode.kind] ?? currentNode.kind}
+              </span>
+              <span className={styles.nucleusLabel}>{currentNode.label}</span>
+              <span className={styles.nucleusDesc}>{currentNode.description}</span>
+            </div>
+
+            {/* Stem hairline: nucleus → children */}
+            {(children !== null || phase === 'splitting') && (
+              <div className={styles.stemRight} />
             )}
-          </div>
 
-          {/* Splitting indicator */}
-          {phase === 'splitting' && (
-            <div className={styles.splittingRow}>
+            {/* Splitting indicator */}
+            {phase === 'splitting' && (
               <span className={styles.splittingText}>klyver</span>
-            </div>
-          )}
+            )}
 
-          {/* Child nodes — 2-column grid */}
-          {phase === 'viewing' && children && children.length > 0 && (
-            <div className={styles.childGrid}>
-              {children.map((child, i) => (
-                <button
-                  key={child.id}
-                  className={styles.childNode}
-                  style={{ animationDelay: `${i * 55}ms` }}
-                  onClick={() => handleSelect(child)}
-                >
-                  <span className={styles.childKind}>
-                    {KIND_SE[child.kind] ?? child.kind}
-                  </span>
-                  <span className={styles.childLabel}>{child.label}</span>
-                  <span className={styles.childDesc}>{child.description}</span>
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Children — hairline tree */}
+            {phase === 'viewing' && children && children.length > 0 && (
+              <div className={styles.childrenSection}>
+                {children.map((child, i) => (
+                  <button
+                    key={child.id}
+                    className={styles.childItem}
+                    style={{ animationDelay: `${i * 55}ms` }}
+                    onClick={() => handleSelect(child)}
+                  >
+                    <div className={styles.childStem} />
+                    <div className={styles.childContent}>
+                      <span className={styles.childKind}>
+                        {KIND_SE[child.kind] ?? child.kind}
+                      </span>
+                      <span className={styles.childLabel}>{child.label}</span>
+                      <span className={styles.childDesc}>{child.description}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {/* Receipt trigger — only after >=2 navigations */}
+          </div>{/* /nodeRow */}
+
+          {/* Receipt trigger — only after ≥2 navigations */}
           {canReceipt && (
             <div className={styles.receiptRow}>
               <button
@@ -267,7 +256,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── RECEIPT ── */}
+      {/* ─ RECEIPT ─ */}
       {phase === 'receipt' && (
         <Receipt
           path={derivationPath}
@@ -276,6 +265,7 @@ export default function Home() {
           onReset={handleReset}
         />
       )}
+
     </main>
   )
 }
