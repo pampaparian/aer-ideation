@@ -23,6 +23,21 @@ const KIND_SE: Record<string, string> = {
   emergence: 'emergens',
 }
 
+// Radial fan angles in degrees (0° = right horizontal)
+function fanAngles(n: number): number[] {
+  if (n <= 1) return [0]
+  const spread = n === 2 ? 22 : n === 3 ? 30 : n === 4 ? 38 : 44
+  return Array.from({ length: n }, (_, i) =>
+    -spread + (i / (n - 1)) * spread * 2
+  )
+}
+
+const RADIUS = 215 // px from nucleus edge to child label
+
+function pause(ms: number) {
+  return new Promise<void>(r => setTimeout(r, ms))
+}
+
 export default function Home() {
   const [phase, setPhase] = useState<Phase>('input')
   const [inputVal, setInputVal] = useState('')
@@ -31,6 +46,7 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryStep[]>([])
   const [currentNode, setCurrentNode] = useState<IdeaNode | null>(null)
   const [children, setChildren] = useState<IdeaNode[] | null>(null)
+  const [exiting, setExiting] = useState(false)
 
   const canReceipt = history.length >= 2 && phase === 'viewing'
   const canGoBack = history.length > 0 || phase === 'receipt'
@@ -70,11 +86,17 @@ export default function Home() {
   }
 
   async function handleSelect(child: IdeaNode) {
-    if (!currentNode || !children) return
+    if (!currentNode || !children || exiting) return
+    // 1. Slide nucleus left + fade
+    setExiting(true)
+    await pause(210)
+    // 2. Swap state (all batched in React 18)
+    setExiting(false)
     setHistory(prev => [...prev, { focusNode: currentNode, children, selectedChild: child }])
     setCurrentNode(child)
     setChildren(null)
     setPhase('splitting')
+    // 3. Fetch new children
     try {
       const res = await fetch('/api/split', {
         method: 'POST',
@@ -122,6 +144,8 @@ export default function Home() {
     setError(null)
   }
 
+  const angles = children ? fanAngles(children.length) : []
+
   return (
     <main className={styles.main}>
 
@@ -153,11 +177,7 @@ export default function Home() {
                 placeholder="grejen"
                 autoFocus
               />
-              <button
-                className={styles.submitBtn}
-                type="submit"
-                disabled={!inputVal.trim()}
-              >
+              <button className={styles.submitBtn} type="submit" disabled={!inputVal.trim()}>
                 →
               </button>
             </div>
@@ -173,32 +193,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─ SPATIAL NODE VIEW ─ */}
+      {/* ─ SPATIAL VIEW ─ */}
       {(phase === 'viewing' || phase === 'splitting') && currentNode && (
         <div className={styles.arena}>
 
-          {/* Breadcrumb trail: faded, above nucleus */}
+          {/* Clickable trail — faded, physically represents the path leftwards */}
           {history.length > 0 && (
-            <div className={styles.trail}>
+            <nav className={styles.trail} aria-label="Tankekedja">
               {history.map((step, i) => (
                 <span key={step.focusNode.id} className={styles.trailItem}>
                   <button
                     className={styles.trailBtn}
                     onClick={() => handleBackTo(i)}
+                    title={`Gå tillbaka till \u201c${step.focusNode.label}\u201d`}
                   >
                     {step.focusNode.label}
                   </button>
-                  <span className={styles.trailSep}>→</span>
+                  <span className={styles.trailSep} aria-hidden>→</span>
                 </span>
               ))}
-            </div>
+            </nav>
           )}
 
-          {/* Horizontal node row: nucleus ——— children */}
+          {/* Horizontal node row */}
           <div className={styles.nodeRow}>
 
-            {/* Nucleus — re-keyed for slide-in animation */}
-            <div key={currentNode.id} className={styles.nucleus}>
+            {/* NUCLEUS — re-keyed so nucleusIn triggers on each new node */}
+            <div
+              key={currentNode.id}
+              className={`${styles.nucleus} ${exiting ? styles.nucleusExiting : ''}`}
+            >
               <span className={styles.nucleusKind}>
                 {KIND_SE[currentNode.kind] ?? currentNode.kind}
               </span>
@@ -206,7 +230,7 @@ export default function Home() {
               <span className={styles.nucleusDesc}>{currentNode.description}</span>
             </div>
 
-            {/* Stem hairline: nucleus → children */}
+            {/* Stem hairline */}
             {(children !== null || phase === 'splitting') && (
               <div className={styles.stemRight} />
             )}
@@ -216,38 +240,71 @@ export default function Home() {
               <span className={styles.splittingText}>klyver</span>
             )}
 
-            {/* Children — hairline tree */}
+            {/* RADIAL CHILDREN */}
             {phase === 'viewing' && children && children.length > 0 && (
-              <div className={styles.childrenSection}>
-                {children.map((child, i) => (
-                  <button
-                    key={child.id}
-                    className={styles.childItem}
-                    style={{ animationDelay: `${i * 55}ms` }}
-                    onClick={() => handleSelect(child)}
-                  >
-                    <div className={styles.childStem} />
-                    <div className={styles.childContent}>
+              <div className={styles.radialHost}>
+
+                {/* 0.25px hairlines via SVG */}
+                <svg
+                  width={0}
+                  height={0}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {angles.map((deg, i) => {
+                    const rad = (deg * Math.PI) / 180
+                    const x2 = RADIUS * Math.cos(rad)
+                    const y2 = RADIUS * Math.sin(rad)
+                    return (
+                      <line
+                        key={i}
+                        x1={0} y1={0}
+                        x2={x2} y2={y2}
+                        stroke="rgba(0,0,0,0.16)"
+                        strokeWidth="0.25"
+                      />
+                    )
+                  })}
+                </svg>
+
+                {/* Child node buttons — radially positioned */}
+                {children.map((child, i) => {
+                  const rad = (angles[i] * Math.PI) / 180
+                  const x = RADIUS * Math.cos(rad)
+                  const y = RADIUS * Math.sin(rad)
+                  return (
+                    <button
+                      key={child.id}
+                      className={styles.childNode}
+                      style={{
+                        transform: `translate(${x}px, calc(${y}px - 50%))`,
+                        animationDelay: `${i * 60}ms`,
+                      }}
+                      onClick={() => handleSelect(child)}
+                    >
                       <span className={styles.childKind}>
                         {KIND_SE[child.kind] ?? child.kind}
                       </span>
                       <span className={styles.childLabel}>{child.label}</span>
                       <span className={styles.childDesc}>{child.description}</span>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                })}
+
               </div>
             )}
 
           </div>{/* /nodeRow */}
 
-          {/* Receipt trigger — only after ≥2 navigations */}
+          {/* Receipt trigger — unlocked at depth ≥2 */}
           {canReceipt && (
             <div className={styles.receiptRow}>
-              <button
-                className={styles.receiptBtn}
-                onClick={() => setPhase('receipt')}
-              >
+              <button className={styles.receiptBtn} onClick={() => setPhase('receipt')}>
                 generera recept →
               </button>
             </div>

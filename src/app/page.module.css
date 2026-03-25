@@ -13,30 +13,25 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 40px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.1);
+  border-bottom: 0.25px solid rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   background: #f5f4f0;
   z-index: 10;
 }
-
 .headerLeft  { display: flex; align-items: baseline; gap: 14px; }
 .headerRight { display: flex; align-items: center; gap: 22px; }
-
 .wordmark {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #0a0a0a;
 }
-
 .slot {
   font-size: 8px;
   letter-spacing: 0.14em;
-  color: rgba(0,0,0,0.24);
+  color: rgba(0,0,0,0.22);
 }
-
 .navBtn {
   background: none;
   border: none;
@@ -44,13 +39,13 @@
   font-family: inherit;
   font-size: 9px;
   letter-spacing: 0.1em;
-  color: rgba(0,0,0,0.3);
+  color: rgba(0,0,0,0.28);
   padding: 0;
   transition: color 100ms;
 }
 .navBtn:hover { color: #0a0a0a; }
 
-/* ─ INPUT STAGE ─ */
+/* ─ INPUT ─ */
 .inputStage {
   flex: 1;
   display: flex;
@@ -59,16 +54,14 @@
   justify-content: center;
   padding: 40px 24px;
 }
-
 .inputWrap {
   display: flex;
   align-items: stretch;
-  border: 0.5px solid rgba(0,0,0,0.16);
+  border: 0.25px solid rgba(0,0,0,0.2);
   width: 100%;
-  max-width: 340px;
+  max-width: 320px;
   background: #fff;
 }
-
 .input {
   flex: 1;
   border: none;
@@ -80,55 +73,48 @@
   padding: 12px 16px;
   letter-spacing: 0.01em;
 }
-
-.input::placeholder {
-  color: rgba(0,0,0,0.16);
-  font-style: italic;
-}
-
+.input::placeholder { color: rgba(0,0,0,0.16); font-style: italic; }
 .submitBtn {
   background: #0a0a0a;
   color: #f5f4f0;
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: 17px;
-  line-height: 1;
+  font-size: 18px;
   padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: opacity 80ms;
+  line-height: 1;
 }
-.submitBtn:disabled { opacity: 0.18; cursor: default; }
+.submitBtn:disabled { opacity: 0.15; cursor: default; }
 .submitBtn:hover:not(:disabled) { opacity: 0.7; }
-
 .error {
   font-size: 9px;
-  color: rgba(0,0,0,0.32);
+  color: rgba(0,0,0,0.3);
   letter-spacing: 0.08em;
   margin-top: 12px;
 }
 
-/* ─ CENTER STAGE (loading) ─ */
+/* ─ LOADING ─ */
 .centerStage {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .pulseDot {
   display: block;
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.28);
+  background: rgba(0,0,0,0.25);
   animation: pulseDot 1.2s ease-in-out infinite;
 }
 @keyframes pulseDot {
-  0%, 100% { opacity: 0.12; transform: scale(0.7); }
-  50%       { opacity: 0.5;  transform: scale(1.4); }
+  0%, 100% { opacity: 0.1; transform: scale(0.7); }
+  50%       { opacity: 0.45; transform: scale(1.4); }
 }
 
 /* ─ ARENA ─ */
@@ -137,26 +123,22 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 48px 48px 48px 64px;
+  padding: 44px 56px;
   overflow: hidden;
 }
 
-/* ─ TRAIL (breadcrumb above nucleus) ─ */
+/* ─ TRAIL — the leftward history, physically clickable ─ */
 .trail {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 36px;
-  opacity: 0.3;
+  gap: 2px;
+  margin-bottom: 40px;
+  opacity: 0.2;
+  transition: opacity 200ms;
 }
-
-.trailItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
+.trail:hover { opacity: 0.45; }
+.trailItem { display: flex; align-items: center; gap: 5px; }
 .trailBtn {
   background: none;
   border: none;
@@ -166,181 +148,165 @@
   letter-spacing: 0.07em;
   color: #0a0a0a;
   padding: 0;
-  transition: opacity 100ms;
+  border-bottom: 0.25px solid transparent;
+  transition: border-color 100ms;
 }
-.trailBtn:hover { opacity: 0.7; }
-
+.trailBtn:hover { border-bottom-color: rgba(0,0,0,0.4); }
 .trailSep {
   font-size: 8px;
-  color: rgba(0,0,0,0.35);
+  color: rgba(0,0,0,0.3);
 }
 
-/* ─ SPATIAL NODE ROW ─ */
+/* ─ NODE ROW ─ */
 .nodeRow {
   display: flex;
   align-items: center;
-  gap: 0;
 }
 
 /* ─ NUCLEUS ─ */
 @keyframes nucleusIn {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(22px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-
+@keyframes nucleusOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-22px); }
+}
 .nucleus {
   flex-shrink: 0;
-  max-width: 260px;
+  max-width: 250px;
   display: flex;
   flex-direction: column;
   gap: 7px;
-  animation: nucleusIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: nucleusIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.nucleusExiting {
+  animation: nucleusOut 210ms ease forwards !important;
 }
 
+/* Kind label: extreme background, idea is the star */
 .nucleusKind {
-  font-size: 7.5px;
-  font-weight: 500;
+  font-size: 6.5px;
+  font-weight: 400;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.2);
+  color: rgba(0,0,0,0.16);
 }
-
 .nucleusLabel {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 400;
   color: #0a0a0a;
-  letter-spacing: -0.022em;
-  line-height: 1.03;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
 }
-
 .nucleusDesc {
   font-size: 9.5px;
-  color: rgba(0,0,0,0.34);
+  color: rgba(0,0,0,0.3);
   font-style: italic;
   letter-spacing: 0.01em;
-  line-height: 1.6;
-  max-width: 210px;
+  line-height: 1.55;
+  max-width: 200px;
+  margin-top: 1px;
 }
 
-/* ─ CONNECTING STEM (nucleus → children) ─ */
+/* ─ CONNECTING STEM (0.25px) ─ */
 .stemRight {
-  width: 64px;
-  height: 0.5px;
-  background: rgba(0,0,0,0.13);
+  width: 52px;
+  height: 0.25px;
+  background: rgba(0,0,0,0.14);
   flex-shrink: 0;
 }
 
-/* ─ SPLITTING INDICATOR ─ */
+/* ─ SPLITTING ─ */
 .splittingText {
-  font-size: 8px;
-  letter-spacing: 0.22em;
+  font-size: 7.5px;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.15);
   animation: splittingPulse 1.4s ease-in-out infinite;
-  padding-left: 8px;
+  padding-left: 6px;
 }
 @keyframes splittingPulse {
-  0%, 100% { opacity: 0.12; }
+  0%, 100% { opacity: 0.1; }
   50%       { opacity: 0.55; }
 }
 
-/* ─ CHILDREN ─ */
-@keyframes childIn {
-  from { opacity: 0; transform: translateX(10px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* Vertical hairline — spans center-of-first to center-of-last child.
-   Each childItem has paddingTop/Bottom 13px + label ~16px = ~42px.
-   Center of first = 21px. Center of last = total - 21px. */
-.childrenSection {
-  display: flex;
-  flex-direction: column;
+/* ─ RADIAL HOST ─ */
+.radialHost {
   position: relative;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
-.childrenSection::before {
-  content: '';
+/* ─ CHILD NODES — radially positioned, no boxes ─ */
+@keyframes childIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.childNode {
   position: absolute;
+  top: 0;
   left: 0;
-  top: 21px;
-  bottom: 21px;
-  width: 0.5px;
-  background: rgba(0,0,0,0.1);
-  pointer-events: none;
-}
-
-.childItem {
-  display: flex;
-  align-items: center;
+  /* transform applied inline: translate(x, calc(y - 50%)) */
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  padding: 0;
+  padding: 3px 0 3px 8px;
   opacity: 0;
-  animation: childIn 280ms ease forwards;
-}
-
-.childItem:hover .childContent {
-  opacity: 0.6;
-}
-
-/* Horizontal branch hairline */
-.childStem {
-  width: 24px;
-  height: 0.5px;
-  background: rgba(0,0,0,0.11);
-  flex-shrink: 0;
-}
-
-.childContent {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 13px 0 13px 12px;
+  animation-name: childIn;
+  animation-duration: 270ms;
+  animation-timing-function: ease;
+  animation-fill-mode: forwards;
   transition: opacity 80ms;
 }
+.childNode:hover { opacity: 0.55 !important; }
 
+/* Kind: nearly invisible — category is a filter, not the story */
 .childKind {
-  font-size: 7px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
+  display: block;
+  font-size: 6px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.15);
+  margin-bottom: 2px;
 }
-
 .childLabel {
+  display: block;
   font-size: 13px;
   font-weight: 500;
   color: #0a0a0a;
   letter-spacing: 0.005em;
   line-height: 1.2;
+  white-space: nowrap;
 }
-
 .childDesc {
-  font-size: 8.5px;
-  color: rgba(0,0,0,0.32);
+  display: block;
+  font-size: 8px;
+  color: rgba(0,0,0,0.28);
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.4;
   letter-spacing: 0.01em;
+  max-width: 160px;
+  white-space: normal;
+  margin-top: 1px;
 }
 
 /* ─ RECEIPT TRIGGER ─ */
-.receiptRow {
-  margin-top: 52px;
-}
-
+.receiptRow { margin-top: 52px; }
 .receiptBtn {
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: rgba(0,0,0,0.28);
+  font-size: 8.5px;
+  letter-spacing: 0.13em;
+  color: rgba(0,0,0,0.24);
   padding: 0;
   transition: color 100ms;
 }
-.receiptBtn:hover { color: rgba(0,0,0,0.75); }
+.receiptBtn:hover { color: rgba(0,0,0,0.7); }
