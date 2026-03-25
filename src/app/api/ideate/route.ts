@@ -3,7 +3,7 @@ import type { IdeaNode, NodeKind } from '@/lib/types'
 
 export const runtime = 'edge'
 
-const API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+const GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
 const SYSTEM_PROMPT = `Du är en motor för innovationsbiologi. Din uppgift är att, givet en 'grej' (ett koncept, en idé, ett objekt, ett fenomen), generera ett förgrenat träd av idénoder.
 
@@ -77,13 +77,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Saknar fält: thing' }, { status: 400 })
   }
 
-  if (!API_KEY) {
+  if (!GOOGLE_GENERATIVE_AI_API_KEY) {
     return NextResponse.json({ root: fallbackTree(thing) })
   }
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GENERATIVE_AI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
