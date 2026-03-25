@@ -9,22 +9,17 @@ function stripMarkdown(raw: string): string {
   return raw.replace(/^```json[\s\S]*?\n/i,'').replace(/^```\s*\n/i,'').replace(/\n?```\s*$/i,'').trim()
 }
 
-// Fallback uses standalone labels — NEVER references parentLabel to avoid recursion
+// Fallback: standalone labels, never references parentLabel
 function fallbackChildren(parentId: string, depth: number): IdeaNode[] {
   const defs: Array<{ kind: NodeKind; label: string; desc: string }> = [
-    { kind: 'mutation',   label: 'Direktformat',       desc: 'Kärnan presenterad i renaste möjliga form' },
-    { kind: 'symbiosis',  label: 'Hybrid-modell',      desc: 'Samverkar med komplementär aktivör' },
-    { kind: 'adaptation', label: 'Premiumsegment',     desc: 'Högvärdesversion för betalningsvillig nisch' },
-    { kind: 'emergence',  label: 'Plattformstjänst',   desc: 'Ny infrastruktur uppstår ur konceptets logik' },
+    { kind: 'mutation',   label: 'Digital edition',    desc: 'Digital version med högt distributionsvärde' },
+    { kind: 'symbiosis',  label: 'Kollaborationsprojekt', desc: 'Samarbete med komplementär konstnär eller aktivör' },
+    { kind: 'adaptation', label: 'Prenumerationsmodell', desc: 'Recurring intäkt via abonnentbas' },
+    { kind: 'emergence',  label: 'AI-driven plattform', desc: 'Ny kategori uppstår via intelligent motor' },
   ]
   return defs.map((d, i) => ({
-    id: `${parentId}_${i+1}`,
-    label: d.label,
-    description: d.desc,
-    kind: d.kind,
-    depth: depth + 1,
-    parentId,
-    children: [],
+    id: `${parentId}_${i+1}`, label: d.label, description: d.desc,
+    kind: d.kind, depth: depth + 1, parentId, children: [],
   }))
 }
 
@@ -38,12 +33,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) })
   }
 
-  const systemPrompt = `Du är ett innovationssystem för biologisk konceptklyvning.
+  const systemPrompt = `Du är ett innovationssystem inbyggt i David Stenbecks personliga idéverktyg Ær Ideation.
 
-FUNDAMENTALT PARADIGM:
-Tänk: \"Vilka konkreta alternativ FINNS I VÄRLDEN inom denna kategori?\" INTE: \"Hur modifierar jag moderkonceptets namn?\".
+PERSONA — DU AGERAR SOM EN FÖRLÄNGNING AV DAVIDS BLICK:
+David Stenbeck: svensk digital konstnär (Cinema 4D, @dovneon, 260k+ följare), poet (@ultrahavn).
+Estetik: minimalism, rymd, litterär tyngd, precision. ULTRAHAVN.
+Domän: digital konst, poesi, AI-verktyg, publikationer, förlagsmodeller, pop-ups, utställningar.
+Om en idé inte känns som något David skulle bygga, publicera eller driva — är den fel.
 
-RETURNERA ENBART RÅ JSON. Inga backticks, markdown.
+MISSION:
+Givet ett moderkoncept, generera 4 KONKRETA ALTERNATIVA BEGREPP i samma kategori/domän.
+Tänk: \"Vilka olika format, projekt eller kanaler kan detta bli?\" INTE: \"Hur modifierar jag moderkonceptets namn?\".
+
+Returnera ENBART rå JSON. Inga backticks, markdown.
 
 Schema:
 {"children":[
@@ -53,34 +55,47 @@ Schema:
 {"id":"${parentId}_4","label":"KONKRET NAMN","description":"8 ord","kind":"emergence","depth":${newDepth},"parentId":"${parentId}","children":[]}
 ]}
 
-FEW-SHOT KORREKT (konkreta alternativ, INTE modifieringar av moderkonceptets namn):
+DAVIDS DEFINITIVA FACIT-KEDJOR (följ exakt denna klyvningsstil):
+\"Husbyggnadsbok\" → Digital bok | Prenumerationsmagasin | Workshop-serie | Arkitektur-podcast
+\"DIY (från soffbord)\" → Möbeltidning | Bygginstruktionsplattform | Flatpack-kollaboration | Pop-up workshop
 \"Diktsamling\" → Haikusamling | Elegikatalog | Spoken word-album | Visuell poesi
 \"Serieroman\" → Manga | Graphic novel | Webtoon | Stumfilm-adaptation
-\"AI-Redaktör\" → Faktacheck-robot | Tonanalysator | Rubrikgenerator | Co-pilot för journalister
-\"Kafé\" → Drive-through | Pop-up kök | Ghost kitchen | Automat-kafé
-\"Prenumerationstjänst\" → Box-service | Access-modell | Community-prenumeration | Freemium-app
-\"Spel\" → Mobilspel | PC-spel | Brädspel | AR-upplevelse
-\"Faktakontrollant\" → AI-faktatjänst | Manuell granskare | Crowdsourcad faktakoll | Domänspecialist
+\"AI-verktyg\" → Chatbot-plattform | Bildgenerator | Kodassistent | Dataanalystjänst
+\"Konstbok\" → Signerad limited edition | Open access PDF | Utställningskatalog | Crowdfundad upplaga
+\"Pop-up galleri\" → Residensprogram | Nomadisk utställning | Handelsplats | Kollaborativ installation
 
-FEW-SHOT FEL (undvik ALLTID):
-\"Diktsamling\" → Digital diktsamling \u2717 (innehåller moderkonceptet)
-\"AI-Redaktör\" → Integrerad AI-Redaktör \u2717 (innehåller moderkonceptet)
-\"Kafé\" → Nytt kafé \u2717
+VALIDERINGSKRITERIER — målet ska vara konceptuellt och strategiskt:
+✓ Publikation, bok, tidskrift, digital release, diktsamling
+✓ AI-verktyg, digital plattform, nischat SaaS för kreativa
+✓ Förlagsmodell, licensiering, prenumerationsintäkt
+✓ Pop-up, installation, utställning, residens
+✓ Spoken word, podcast, radioformat, event-serie
+✕ INTE: generisk SaaS för alla, corporate lösningar
+✕ INTE: granulära fysiska detaljer (\"träben\", \"lackering\", material-specifikationer)
 
-KRITISK REGEL:
+FINANSIELL NYKTERHET (valideringssteg):
+Trots estetisk styrning — varje idé måste ha en genomförbar intäktsmodell:
+Prenumeration? Licensiering? Försäljning av upplaga? Utställningsarrangör? API-avgift? Konsultuppdrag?
+Beskrivningen (8 ord) ska antyda denna bärighet.
+
+KRITISK REGEL — ANTI-REKURSION:
 1. Label får ALDRIG innehålla moderkonceptets namn eller delar av det.
-2. Aldrig \"[prefix] [moderbegrepp]\" som \"Integrerad X\", \"Digital X\", \"Modern X\".
+2. Aldrig \"[prefix] [moderbegrepp]\" som \"Digital ${parentLabel}\", \"Ny ${parentLabel}\", \"Integrerad ${parentLabel}\".
 3. Varje barn = ett EGET BEGREPP som står på egna ben.
 
-KATEGORIERNA är sekundära filter:
-- mutation: väsentlig förvandling
-- symbiosis: samverkar med annat system
-- adaptation: anpassad till ny nisch
-- emergence: ny egenskap uppstår
+FEW-SHOT FEL (undvik ALLTID):
+\"Diktsamling\" → Digital diktsamling ✗
+\"AI-verktyg\" → Integrerad AI-verktyg ✗
+\"Konstbok\" → Ny konstbok ✗
 
-MISSION: Konkreta, genomförbara affärsidéer med kommersiell potential.
-label: 1-4 ord, begreppets riktiga namn
-description: 8 ord, affärspotential tydlig
+KATEGORIERNA är sekundära filter:
+- mutation: väsentlig förvandling av formen
+- symbiosis: samverkan med annat system eller person
+- adaptation: anpassad till ny nisch eller kanal
+- emergence: ny egenskap eller kategori uppstår
+
+label: 1-4 ord
+description: 8 ord, affärspotential och estetisk riktning tydlig
 children alltid []
 Returnera ENBART giltig JSON`
 
@@ -103,12 +118,12 @@ Returnera ENBART giltig JSON`
     const gd = await resp.json()
     const raw = gd?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
     const parsed: { children: IdeaNode[] } = JSON.parse(stripMarkdown(raw))
-    // Post-process: remove any label that contains the parentLabel (recursion guard)
+    // Sanitization: strip recursive labels
     const parentLower = parentLabel.toLowerCase()
     const sanitized = parsed.children.map(child => {
       if (child.label.toLowerCase().includes(parentLower)) {
-        console.warn(`split: rekursiv label detekterad och rensad: "${child.label}" (parent: "${parentLabel}")`)
-        return { ...child, label: child.label.replace(new RegExp(parentLabel, 'gi'), '').replace(/\\s+/g, ' ').trim() || 'Nytt begrepp' }
+        console.warn(`split: rekursiv label: "${child.label}" (parent: "${parentLabel}")`)
+        return { ...child, label: child.label.replace(new RegExp(parentLabel, 'gi'), '').replace(/\s+/g, ' ').trim() || 'Nytt koncept' }
       }
       return child
     })
