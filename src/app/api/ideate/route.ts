@@ -7,55 +7,59 @@ const GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
 // Generates root + depth-1 children only.
 // Depth-2+ generated on demand via /api/split.
-const SYSTEM_PROMPT = `Du är ett affärsinnovationssystem baserat på biologisk konceptklyvning.
+const SYSTEM_PROMPT = `Du är ett innovationssystem. Givet ett begrepp, generera 5 KONKRETA ALTERNATIVA BEGREPP inom samma domän.
 
-MISSION: Klipp upp ett begrepp i 5 konkreta, tydliga alternativ. Varje alternativ ska vara en genomförbar idé — en produkt, tjänst, affarsmodell eller format man kan bygga något kring. Prioritera kommersiell potential och innovationsvärde.
+FUNDAMENTALT PARADIGM:
+Tänk: \"Vilka 5 faktiska saker av denna typ finns i världen?\" Inte: \"Hur modifierar jag det här begreppets namn?\".
+Varje barn ska vara ett EGET BEGREPP — en konkret produkt, tjänst eller format.
 
 Returnera ENBART rå JSON. Inga backticks, markdown, förklaringar.
 
 Schema:
 {"root":{"id":"root","label":"GREJEN","description":"8 ord","kind":"root","depth":0,"parentId":null,"children":[
-{"id":"n1","label":"KONKRET NAMN","description":"8 ord, affärspotential tydlig","kind":"mutation","depth":1,"parentId":"root","children":[]},
+{"id":"n1","label":"KONKRET NAMN","description":"8 ord, affärspotential","kind":"mutation","depth":1,"parentId":"root","children":[]},
 {"id":"n2","label":"KONKRET NAMN","description":"8 ord","kind":"symbiosis","depth":1,"parentId":"root","children":[]},
 {"id":"n3","label":"KONKRET NAMN","description":"8 ord","kind":"parasite","depth":1,"parentId":"root","children":[]},
 {"id":"n4","label":"KONKRET NAMN","description":"8 ord","kind":"adaptation","depth":1,"parentId":"root","children":[]},
 {"id":"n5","label":"KONKRET NAMN","description":"8 ord","kind":"emergence","depth":1,"parentId":"root","children":[]}
 ]}}
 
-FEW-SHOT EXEMPEL (följ exakt denna stil):
-Input "bok" → barn: Diktsamling, Serieroman, Lärobok, Fotobok, Essabok
-Input "musik" → barn: Podcastserie, Synkmusik, Ringtone-label, Live-event-app, AI-kompositr
-Input "app" → barn: Prenumerationstjänst, Spelplattform, B2B-verktyg, Marknadsplats, API-produkt
-Input "kläder" → barn: Second hand-plattform, Uniform-as-a-service, Fast fashion-parasit, Adaptiv design, Slow fashion-rörelse
+FEW-SHOT EXEMPEL (följ exakt denna stil — riktiga namn, inga prefix):
+Input \"bok\" → Diktsamling | Serieroman | Lärobok | Fotobok | Novellsamling
+Input \"musik\" → Podcastserie | Ringtone-label | AI-kompositör | Live-eventapp | Studiobokning
+Input \"redaktör\" → Chefredaktör | Faktakontrollant | Bildredaktör | Webredaktör | Korrläsare
+Input \"app\" → Mobilspel | B2B-verktyg | Marknadsplats | API-produkt | Community-plattform
+Input \"mat\" → Catering | Matleverns | Prenumerationslåda | Ghost kitchen | Recepttjänst
 
-KATEGORIERNA är filter (sekundära — idén är primär):
-- mutation: väsentlig förvandling av konceptet
-- symbiosis: samverkan med något annat system
+KATEGORIERNA är SEKUNDÄRA FILTER (idén är primär):
+- mutation: väsentlig förvandling
+- symbiosis: samverkan med annat system
 - parasite: lever av befintligt ekosystem
-- adaptation: anpassad till nytt sammanhang
+- adaptation: anpassad till ny nisch
 - emergence: ny egenskap uppstår
 
-ABSOLUT FÖRBJUDET i label:
-· "mutation av [X]", "symbios av [X]", "adaptation av [X]"
-· originalkonceptets namn som suffix
-· suffix " variant" " form" " version"
+ABSOLUT FÖRBJUDET:
+· Label får INTE innehålla rotkonseptets namn
+· Inga prefix + begreppet (\"Ny bok\", \"Digital bok\", \"Integrerad bok\" = FEL)
+· Suffix \" variant\" \" version\" \" form\"
 
-label: 1-4 ord, konkret produktnamn eller kategori
-description: 8 ord, visar affärspotential
+label: 1-4 ord, det konkreta begreppets riktiga namn
+description: 8 ord, affärspotential tydlig
 children alltid []
 Returnera ENBART giltig JSON`
 
 function fallbackRoot(thing: string): IdeaNode {
+  // Standalone labels — domain-agnostic, no reference to 'thing' in labels
   const defs: Array<{ kind: NodeKind; label: string; desc: string }> = [
-    { kind: 'mutation',   label: `${thing}+`,       desc: 'Väsentligt förbättrad version med ny funktion' },
-    { kind: 'symbiosis',  label: `${thing} x Y`,    desc: 'Samverkar med komplementärt system för tillväxt' },
-    { kind: 'parasite',   label: `${thing} Pro`,    desc: 'Bygger ovanpå befintlig plattform eller marknad' },
-    { kind: 'adaptation', label: `Micro-${thing}`,  desc: 'Anpassad variant för ny nisch eller kanal' },
-    { kind: 'emergence',  label: `Neo-${thing}`,    desc: 'Ny kategori uppstår ur ursprungskonceptet' },
+    { kind: 'mutation',   label: 'Direktkanal',       desc: 'Direkt till slutkund utan mellanhaänd' },
+    { kind: 'symbiosis',  label: 'Plattformstjänst',  desc: 'Samverkar med befintlig infrastruktur' },
+    { kind: 'parasite',   label: 'White-label',        desc: 'Lever på andra aktörers varuumärken' },
+    { kind: 'adaptation', label: 'Nicheprodukt',       desc: 'Smal, djup lösning för specifik nisch' },
+    { kind: 'emergence',  label: 'Ekosystemprodukt',   desc: 'Ny kategori uppstår ur konceptets logik' },
   ]
   return {
     id: 'root', label: thing,
-    description: 'Ursprungskonceptet, klart för klyvning',
+    description: 'Ursprungskonceptet, redo för klyvning',
     kind: 'root', depth: 0, parentId: null,
     children: defs.map((d, i) => ({
       id: `n${i+1}`, label: d.label, description: d.desc,
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: [{ role: 'user', parts: [{ text: `Grejen: ${thing}` }] }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 2048, responseMimeType: 'application/json' },
+          generationConfig: { temperature: 0.85, maxOutputTokens: 2048, responseMimeType: 'application/json' },
         }),
       }
     )

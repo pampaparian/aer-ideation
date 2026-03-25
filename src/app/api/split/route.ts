@@ -9,17 +9,18 @@ function stripMarkdown(raw: string): string {
   return raw.replace(/^```json[\s\S]*?\n/i,'').replace(/^```\s*\n/i,'').replace(/\n?```\s*$/i,'').trim()
 }
 
-function fallbackChildren(parentId: string, parentLabel: string, depth: number): IdeaNode[] {
-  const defs: Array<{ kind: NodeKind; prefix: string }> = [
-    { kind: 'mutation',   prefix: 'Ny' },
-    { kind: 'symbiosis',  prefix: 'Integrerad' },
-    { kind: 'adaptation', prefix: 'Skalad' },
-    { kind: 'emergence',  prefix: 'Latent' },
+// Fallback uses standalone labels — NEVER references parentLabel to avoid recursion
+function fallbackChildren(parentId: string, depth: number): IdeaNode[] {
+  const defs: Array<{ kind: NodeKind; label: string; desc: string }> = [
+    { kind: 'mutation',   label: 'Direktformat',       desc: 'Kärnan presenterad i renaste möjliga form' },
+    { kind: 'symbiosis',  label: 'Hybrid-modell',      desc: 'Samverkar med komplementär aktivör' },
+    { kind: 'adaptation', label: 'Premiumsegment',     desc: 'Högvärdesversion för betalningsvillig nisch' },
+    { kind: 'emergence',  label: 'Plattformstjänst',   desc: 'Ny infrastruktur uppstår ur konceptets logik' },
   ]
   return defs.map((d, i) => ({
     id: `${parentId}_${i+1}`,
-    label: `${d.prefix} ${parentLabel}`,
-    description: `Derivat med kommersiell potential inom ${d.kind}`,
+    label: d.label,
+    description: d.desc,
     kind: d.kind,
     depth: depth + 1,
     parentId,
@@ -34,14 +35,15 @@ export async function POST(req: NextRequest) {
   const newDepth = (depth ?? 1) + 1
   if (!GOOGLE_GENERATIVE_AI_API_KEY) {
     console.error('split: API-nyckel saknas')
-    return NextResponse.json({ children: fallbackChildren(parentId, parentLabel, depth ?? 1) })
+    return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) })
   }
 
-  const systemPrompt = `Du är ett affärsinnovationssystem för biologisk konceptklyvning.
+  const systemPrompt = `Du är ett innovationssystem för biologisk konceptklyvning.
 
-MISSION: Givet ett moderkoncept, generera 4 konkreta avkomma — produkter, tjänster, format eller affarsmodeller man faktiskt kan bygga. Prioritera kommersiell potential och innovationsvärde.
+FUNDAMENTALT PARADIGM:
+Tänk: \"Vilka konkreta alternativ FINNS I VÄRLDEN inom denna kategori?\" INTE: \"Hur modifierar jag moderkonceptets namn?\".
 
-Returnera ENBART rå JSON. Inga backticks, markdown.
+RETURNERA ENBART RÅ JSON. Inga backticks, markdown.
 
 Schema:
 {"children":[
@@ -51,30 +53,38 @@ Schema:
 {"id":"${parentId}_4","label":"KONKRET NAMN","description":"8 ord","kind":"emergence","depth":${newDepth},"parentId":"${parentId}","children":[]}
 ]}
 
-FEW-SHOT KEDJA (exakt denna klyvningsstil):
-"Diktsamling" → Klassisk diktsamling / Modern diktsamling / Illustrerad diktbok / Postmodern diktbok
-"Modern diktsamling" → Digital diktsamling / Tryckt konstbok / Poetisk Ljudbok / Instagram-dikter
-"Serieroman" → Manga / Grafisk roman / Webtoon / Faktaseriebok
-"Prenumerationstjänst" → Freemium-app / Box-tjänst / Tillgångsmodell / Community-prenumeration
+FEW-SHOT KORREKT (konkreta alternativ, INTE modifieringar av moderkonceptets namn):
+\"Diktsamling\" → Haikusamling | Elegikatalog | Spoken word-album | Visuell poesi
+\"Serieroman\" → Manga | Graphic novel | Webtoon | Stumfilm-adaptation
+\"AI-Redaktör\" → Faktacheck-robot | Tonanalysator | Rubrikgenerator | Co-pilot för journalister
+\"Kafé\" → Drive-through | Pop-up kök | Ghost kitchen | Automat-kafé
+\"Prenumerationstjänst\" → Box-service | Access-modell | Community-prenumeration | Freemium-app
+\"Spel\" → Mobilspel | PC-spel | Brädspel | AR-upplevelse
+\"Faktakontrollant\" → AI-faktatjänst | Manuell granskare | Crowdsourcad faktakoll | Domänspecialist
 
-REGELN: Varje klyvning producerar DIVERGERANDE alternativ — inte varianter på varandra, utan tydliga vägval.
+FEW-SHOT FEL (undvik ALLTID):
+\"Diktsamling\" → Digital diktsamling \u2717 (innehåller moderkonceptet)
+\"AI-Redaktör\" → Integrerad AI-Redaktör \u2717 (innehåller moderkonceptet)
+\"Kafé\" → Nytt kafé \u2717
 
-KATEGORIERNA som filter:
+KRITISK REGEL:
+1. Label får ALDRIG innehålla moderkonceptets namn eller delar av det.
+2. Aldrig \"[prefix] [moderbegrepp]\" som \"Integrerad X\", \"Digital X\", \"Modern X\".
+3. Varje barn = ett EGET BEGREPP som står på egna ben.
+
+KATEGORIERNA är sekundära filter:
 - mutation: väsentlig förvandling
 - symbiosis: samverkar med annat system
 - adaptation: anpassad till ny nisch
 - emergence: ny egenskap uppstår
 
-ABSOLUT FÖRBJUDET i label:
-· "mutation av [parent]", prefix + moderkonceptets namn
-· suffix " variant" " version" " form"
-
-label: 1-4 ord, specifikt namn
-description: 8 ord, affärspotential synlig
+MISSION: Konkreta, genomförbara affärsidéer med kommersiell potential.
+label: 1-4 ord, begreppets riktiga namn
+description: 8 ord, affärspotential tydlig
 children alltid []
 Returnera ENBART giltig JSON`
 
-  const userMsg = `Moderkoncept: "${parentLabel}" (${parentKind}). Rotkontext: "${rootThing}". Klipp upp i 4 divergerande affärsidéer.`
+  const userMsg = `Moderkoncept: \"${parentLabel}\" (${parentKind}: ${parentDescription}). Rotkontext: \"${rootThing}\". Generera 4 konkreta alternativa begrepp UTAN att använda \"${parentLabel}\" i något label-fält.`
 
   try {
     const resp = await fetch(
@@ -85,16 +95,26 @@ Returnera ENBART giltig JSON`
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-          generationConfig: { temperature: 0.85, maxOutputTokens: 1024, responseMimeType: 'application/json' },
+          generationConfig: { temperature: 0.9, maxOutputTokens: 1024, responseMimeType: 'application/json' },
         }),
       }
     )
-    if (!resp.ok) { console.error('split: HTTP', resp.status); return NextResponse.json({ children: fallbackChildren(parentId, parentLabel, depth ?? 1) }) }
+    if (!resp.ok) { console.error('split: HTTP', resp.status); return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) }) }
     const gd = await resp.json()
     const raw = gd?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    return NextResponse.json(JSON.parse(stripMarkdown(raw)))
+    const parsed: { children: IdeaNode[] } = JSON.parse(stripMarkdown(raw))
+    // Post-process: remove any label that contains the parentLabel (recursion guard)
+    const parentLower = parentLabel.toLowerCase()
+    const sanitized = parsed.children.map(child => {
+      if (child.label.toLowerCase().includes(parentLower)) {
+        console.warn(`split: rekursiv label detekterad och rensad: "${child.label}" (parent: "${parentLabel}")`)
+        return { ...child, label: child.label.replace(new RegExp(parentLabel, 'gi'), '').replace(/\\s+/g, ' ').trim() || 'Nytt begrepp' }
+      }
+      return child
+    })
+    return NextResponse.json({ children: sanitized })
   } catch (err) {
     console.error('split: fel -', err)
-    return NextResponse.json({ children: fallbackChildren(parentId, parentLabel, depth ?? 1) })
+    return NextResponse.json({ children: fallbackChildren(parentId, depth ?? 1) })
   }
 }
