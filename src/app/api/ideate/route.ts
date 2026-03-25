@@ -78,12 +78,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!GOOGLE_GENERATIVE_AI_API_KEY) {
+    console.error('ideate: GOOGLE_GENERATIVE_AI_API_KEY saknas i miljon')
     return NextResponse.json({ root: fallbackTree(thing) })
   }
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_GENERATIVE_AI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_GENERATIVE_AI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const err = await response.text()
-      console.error('Gemini error:', err)
+      console.error('ideate: Gemini HTTP', response.status, response.statusText, '-', err)
       return NextResponse.json({ root: fallbackTree(thing) })
     }
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
     const parsed = JSON.parse(text)
     return NextResponse.json(parsed)
   } catch (err) {
-    console.error('ideate route error:', err)
+    console.error('ideate: fetch/parse-fel -', err)
     return NextResponse.json({ root: fallbackTree(thing) })
   }
 }
