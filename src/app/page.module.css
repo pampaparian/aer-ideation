@@ -1,0 +1,91 @@
+.main {
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 24px 32px 23px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.15);
+}
+
+.wordmark {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.sub {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: rgba(0,0,0,0.35);
+}
+
+.form {
+  padding: 32px 32px 0;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: stretch;
+  border: 0.5px solid rgba(0,0,0,0.2);
+  max-width: 480px;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #000;
+  background: #fff;
+  padding: 10px 14px;
+  letter-spacing: 0.01em;
+}
+
+.input::placeholder {
+  color: rgba(0,0,0,0.25);
+  font-style: italic;
+}
+
+.input:disabled {
+  opacity: 0.5;
+}
+
+.button {
+  background: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  padding: 0 16px;
+  letter-spacing: 0.04em;
+  transition: opacity 80ms;
+}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.button:hover:not(:disabled) {
+  opacity: 0.75;
+}
+
+.error {
+  font-size: 10px;
+  color: rgba(0,0,0,0.4);
+  letter-spacing: 0.08em;
+  padding: 12px 32px;
+}

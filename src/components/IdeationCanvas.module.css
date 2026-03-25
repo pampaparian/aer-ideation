@@ -1,0 +1,60 @@
+.canvas {
+  padding: 40px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rootRow {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 32px;
+}
+
+.branches {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 20px 0 0;
+  position: relative;
+  min-width: 160px;
+  max-width: 200px;
+}
+
+.branchLine {
+  width: 0.5px;
+  height: 20px;
+  background: rgba(0,0,0,0.15);
+  margin-left: 12px;
+  margin-bottom: 4px;
+}
+
+.subBranches {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 4px;
+  margin-left: 8px;
+}
+
+.subBranch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.subLine {
+  width: 0.5px;
+  height: 16px;
+  background: rgba(0,0,0,0.1);
+  margin-left: 10px;
+  margin-bottom: 2px;
+}
