@@ -16,7 +16,7 @@ const SYSTEM_PROMPT = `Du är Davids idéanalytiker i Ær Ideation. David Stenbe
 
 Din uppgift är att analysera en idé och fylla i den förgyllda blankettens fält. Inga hallucinationer. Inga generiska svar. Inga deckare eller frukostflingor. Idéerna måste vara artefakter i Davids specifika domän.
 
-Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock:
+Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock, inga förklaringar före eller efter:
 {
   "ideaTitle": "...",
   "ideaDescription": "... (2-3 meningar, precis, inget fluff)",
@@ -36,7 +36,9 @@ Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock:
     "aestheticTransformation": 0,
     "verdict": "..."
   }
-}`;
+}
+
+VIKTIGT: Alla strängvärden måste vara korrekt JSON-escapade. Använd aldrig ocitaterade citationstecken inuti strängvärden. Håll varje fältvärde kortfattat (max 2 meningar) för att undvika trunkering.`;
 
 interface GeminiPayload {
   ideaTitle: string;
@@ -52,12 +54,28 @@ interface GeminiPayload {
   scoreInput: RawScoreInput;
 }
 
-/** Tar bort eventuella markdown-kodblock som Gemini kan linda JSON i */
-function stripMarkdown(raw: string): string {
-  const trimmed = raw.trim();
-  // ```json ... ``` eller ``` ... ```
-  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  return match ? match[1].trim() : trimmed;
+/**
+ * Robust JSON-extraktion:
+ * 1. Strippar ```json ... ``` eller ``` ... ``` block (aggressivt, även om det finns text runt om)
+ * 2. Extraherar det yttersta { ... } objektet ur strängen
+ * 3. Fallback: returnerar trimmad sträng som den är
+ */
+function extractJSON(raw: string): string {
+  const s = raw.trim();
+
+  // Steg 1: plocka ut innehåll ur kodblock om det finns
+  const codeBlock = s.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  const candidate = codeBlock ? codeBlock[1].trim() : s;
+
+  // Steg 2: hitta yttersta { } och extrahera
+  const start = candidate.indexOf('{');
+  const end = candidate.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    return candidate.slice(start, end + 1);
+  }
+
+  // Steg 3: returnera som-är
+  return candidate;
 }
 
 export async function POST(req: NextRequest) {
@@ -91,7 +109,7 @@ export async function POST(req: NextRequest) {
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: [{ role: "user", parts: [{ text: idea }] }],
           generationConfig: {
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096,
             temperature: 0.7,
             responseMimeType: "application/json",
           },
@@ -123,27 +141,41 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const typedData = geminiData as {
+    candidates?: {
+      content?: { parts?: { text?: string }[] };
+      finishReason?: string;
+    }[];
+  };
+
   const rawText: string =
-    (geminiData as { candidates?: { content?: { parts?: { text?: string }[] } }[] })
-      ?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    typedData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const finishReason: string =
+    typedData?.candidates?.[0]?.finishReason ?? "UNKNOWN";
 
   if (!rawText) {
     return NextResponse.json(
-      { error: "Gemini returnerade tomt svar", raw: JSON.stringify(geminiData) },
+      {
+        error: "Gemini returnerade tomt svar",
+        finishReason,
+        raw: JSON.stringify(geminiData),
+      },
       { status: 502 }
     );
   }
 
-  const cleaned = stripMarkdown(rawText);
+  const extracted = extractJSON(rawText);
 
   let payload: GeminiPayload;
   try {
-    payload = JSON.parse(cleaned) as GeminiPayload;
+    payload = JSON.parse(extracted) as GeminiPayload;
   } catch (parseErr) {
+    // Logga finishReason för att avgöra om trunkering är rotorsaken
     return NextResponse.json(
       {
         error: `Kunde inte tolka Geminis svar: ${String(parseErr)}`,
-        raw: rawText.slice(0, 500),
+        finishReason,
+        raw: rawText.slice(0, 600),
       },
       { status: 502 }
     );
