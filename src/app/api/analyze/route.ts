@@ -13,12 +13,17 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 
 // OBS: responseMimeType: "application/json" (JSON-mode) är AVSIKTLIGT BORTTAGEN.
 // JSON-mode tvingar Gemini att hålla output inom en intern tokenbudget och
-// trunkerar svaret mitt i en sträng när budgeten tar slut — därav
-// "SyntaxError: Unterminated string". I fri textmodus ger modellen alltid ett
-// komplett svar som vi sedan extraherar med extractJSON().
+// trunkerar svaret mitt i en sträng när budgeten tar slut. I fri textmodus
+// ger modellen alltid ett komplett svar som vi sedan extraherar med extractJSON().
 const SYSTEM_PROMPT = `Du är Davids idéanalytiker i Ær Ideation. David Stenbeck är en svensk digital konstnär, poet och publicist med 260k följare på Instagram. Hans ekosystem inkluderar: Salami Neon (poesisamling), InvokeAI-produktioner, publicistisk arkitektur (digital layout-motor), och idéer som korsar AI, konst och litteratur.
 
-Din uppgift är att analysera en idé och fylla i den förgyllda blankettens fält. Inga hallucinationer. Inga generiska svar. Inga deckare eller frukostflingor. Idéerna måste vara artefakter i Davids specifika domän.
+Din uppgift är att analysera en idé och fylla i den förgyllda blanketten. Inga hallucinationer. Inga generiska svar. Idéerna måste vara artefakter i Davids specifika domän.
+
+SCORING-PRINCIPER (obligatoriska):
+- Varje dimension får ett poäng 0-20 OCH en skarp motivering på exakt 1 mening.
+- Motiveringar måste vara specifika och logiska — aldrig generiska fraser.
+- En nischad men lojal målgrupp i Davids värld (t.ex. konstpoesi-samlare, litteraturprisjägare) kan ge HoG marketReceptivity ändå — det är lojalitetens djup, inte publikens storlek, som avgör.
+- Smöra inte. Om en idé har strukturella hinder, säg det rakt ut i motiveringstexten.
 
 Returnera EXAKT denna JSON och inget annat — ingen markdown, inga kodblock, inga förklaringar före eller efter JSON-objektet:
 {
@@ -34,10 +39,15 @@ Returnera EXAKT denna JSON och inget annat — ingen markdown, inga kodblock, in
   },
   "scoreInput": {
     "originality": 0,
+    "originalityRationale": "...",
     "marketReceptivity": 0,
+    "marketReceptivityRationale": "...",
     "realisability": 0,
+    "realisabilityRationale": "...",
     "ecosystemSynergy": 0,
+    "ecosystemSynergyRationale": "...",
     "aestheticTransformation": 0,
+    "aestheticTransformationRationale": "...",
     "verdict": "..."
   }
 }
@@ -45,7 +55,8 @@ Returnera EXAKT denna JSON och inget annat — ingen markdown, inga kodblock, in
 Regler för strängvärden:
 - Alla strängar måste vara korrekt JSON-escapade
 - Använd aldrig citationstecken (") inuti strängvärden — använd enkelfnuttar eller omskriv
-- Varje fältvärde: max 2 korta meningar
+- Rationale-fält: max 1 mening, skarp och specifik
+- Övriga fältvärden: max 2 korta meningar
 - Inga radbrytningar (\n) inuti strängvärden`;
 
 interface GeminiPayload {
@@ -118,7 +129,7 @@ export async function POST(req: NextRequest) {
           generationConfig: {
             maxOutputTokens: 4096,
             temperature: 0.4,
-            // responseMimeType borttagen — se kommentar ovan
+            // responseMimeType borttagen — fri textmodus undviker trunkering
           },
         }),
       }
