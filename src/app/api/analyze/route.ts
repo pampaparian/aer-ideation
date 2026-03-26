@@ -9,19 +9,23 @@ import type { Blankett } from "@/types/blankett";
 export const runtime = "edge";
 
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-// gemini-2.5-flash: stabil alias på v1beta, stöder system_instruction + responseMimeType (JSON-mode)
 const GEMINI_MODEL = "gemini-2.5-flash";
 
+// OBS: responseMimeType: "application/json" (JSON-mode) är AVSIKTLIGT BORTTAGEN.
+// JSON-mode tvingar Gemini att hålla output inom en intern tokenbudget och
+// trunkerar svaret mitt i en sträng när budgeten tar slut — därav
+// "SyntaxError: Unterminated string". I fri textmodus ger modellen alltid ett
+// komplett svar som vi sedan extraherar med extractJSON().
 const SYSTEM_PROMPT = `Du är Davids idéanalytiker i Ær Ideation. David Stenbeck är en svensk digital konstnär, poet och publicist med 260k följare på Instagram. Hans ekosystem inkluderar: Salami Neon (poesisamling), InvokeAI-produktioner, publicistisk arkitektur (digital layout-motor), och idéer som korsar AI, konst och litteratur.
 
 Din uppgift är att analysera en idé och fylla i den förgyllda blankettens fält. Inga hallucinationer. Inga generiska svar. Inga deckare eller frukostflingor. Idéerna måste vara artefakter i Davids specifika domän.
 
-Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock, inga förklaringar före eller efter:
+Returnera EXAKT denna JSON och inget annat — ingen markdown, inga kodblock, inga förklaringar före eller efter JSON-objektet:
 {
   "ideaTitle": "...",
-  "ideaDescription": "... (2-3 meningar, precis, inget fluff)",
+  "ideaDescription": "...",
   "domain": "...",
-  "genealogy": "... (hur idén kopplar till Davids befintliga ekosystem)",
+  "genealogy": "...",
   "realisationPlan": {
     "format": "...",
     "channel": "...",
@@ -38,7 +42,11 @@ Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock, inga 
   }
 }
 
-VIKTIGT: Alla strängvärden måste vara korrekt JSON-escapade. Använd aldrig ocitaterade citationstecken inuti strängvärden. Håll varje fältvärde kortfattat (max 2 meningar) för att undvika trunkering.`;
+Regler för strängvärden:
+- Alla strängar måste vara korrekt JSON-escapade
+- Använd aldrig citationstecken (") inuti strängvärden — använd enkelfnuttar eller omskriv
+- Varje fältvärde: max 2 korta meningar
+- Inga radbrytningar (\n) inuti strängvärden`;
 
 interface GeminiPayload {
   ideaTitle: string;
@@ -55,26 +63,25 @@ interface GeminiPayload {
 }
 
 /**
- * Robust JSON-extraktion:
- * 1. Strippar ```json ... ``` eller ``` ... ``` block (aggressivt, även om det finns text runt om)
- * 2. Extraherar det yttersta { ... } objektet ur strängen
+ * Robust JSON-extraktion ur Geminis fritextsvar:
+ * 1. Plockar ut innehåll ur ```json ... ``` eller ``` ... ``` kodblock om sådana finns
+ * 2. Hittar yttersta { ... } och extraherar det — hanterar text före/efter JSON
  * 3. Fallback: returnerar trimmad sträng som den är
  */
 function extractJSON(raw: string): string {
   const s = raw.trim();
 
-  // Steg 1: plocka ut innehåll ur kodblock om det finns
+  // Steg 1: kodblock
   const codeBlock = s.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   const candidate = codeBlock ? codeBlock[1].trim() : s;
 
-  // Steg 2: hitta yttersta { } och extrahera
+  // Steg 2: yttersta { }
   const start = candidate.indexOf('{');
   const end = candidate.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
     return candidate.slice(start, end + 1);
   }
 
-  // Steg 3: returnera som-är
   return candidate;
 }
 
@@ -110,8 +117,8 @@ export async function POST(req: NextRequest) {
           contents: [{ role: "user", parts: [{ text: idea }] }],
           generationConfig: {
             maxOutputTokens: 4096,
-            temperature: 0.7,
-            responseMimeType: "application/json",
+            temperature: 0.4,
+            // responseMimeType borttagen — se kommentar ovan
           },
         }),
       }
@@ -170,7 +177,6 @@ export async function POST(req: NextRequest) {
   try {
     payload = JSON.parse(extracted) as GeminiPayload;
   } catch (parseErr) {
-    // Logga finishReason för att avgöra om trunkering är rotorsaken
     return NextResponse.json(
       {
         error: `Kunde inte tolka Geminis svar: ${String(parseErr)}`,
