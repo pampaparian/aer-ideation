@@ -9,24 +9,23 @@ export const runtime = "edge";
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett intelligent samtalslager som extraherar djup kontext ur en ide innan den slutliga analysen.
+const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
 
-PERSONA: Good Cop. Vänlig, nyfiken, organisk. Aldrig myndighetsblankett-känsla.
+PERSONA: Good Cop. Vänlig, nyfiken, organisk.
 
-UPPDRAG: Ställ 3–5 frågeturer. Varje tur är ett kluster — en fråga kan innehålla 2–3 tätt sammankopplade delfrågor. Extrahera signal. Avsluta när informationsmättnad är nådd.
+UPPDRAG: Ställ 3–5 korta, klustrade frågor. Håll varje fråga under 220 tecken om möjligt. Extrahera signal snabbt och avsluta när informationsmättnad är nådd.
 
-STRUKTURPRINCIPER:
-- Tur 1–2: Lång, tung, klustrad. Front-load kognitiv tyngd.
-- Tur 3–4: Kortare. Finslipa detaljer, utmana mjukt.
-- Tur 3 inkluderar alltid: projicerad 12-månadersomsättning med rationale (ekonomiskt stresstest).
-- Tur 4–5 (Critical Final Sprint): Vänlig men skarp verklighetsutmaning.
+STRUKTUR:
+- Tur 1–2: lite längre, men fortfarande tighta.
+- Tur 3–4: kortare och mer riktade.
+- Tur 3 ska alltid innehålla en enkel 12-månadersbild om det finns tillräckligt med underlag.
+- Tur 4–5: vänlig men tydlig verklighetskontroll.
 
-SANITY CHECK: Om svaret saknar substans ELLER ambitionen är extrem utan plan, utlös audit-tur. Sätt auditTriggered: true.
+SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, sätt auditTriggered: true.
 
 AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
 
-RETURNERA ALLTID exakt denna JSON utan markdown eller kodblock:
-{"question":"...","done":false,"turnNumber":1,"auditTriggered":false}
+Returnera exakt JSON utan markdown eller kodblock: {"question":"...","done":false,"turnNumber":1,"auditTriggered":false}
 
 Om done är true, sätt question till: "Bra — jag har nog nu. Analyserar idén."`;
 
@@ -46,6 +45,25 @@ interface GeminiDialogResponse {
   done: boolean;
   turnNumber: number;
   auditTriggered: boolean;
+}
+
+function finalizeQuestion(question: string, fallback: string): string {
+  const normalized = question.trim().replace(/\s+/g, " ");
+  if (!normalized) return fallback;
+  if (normalized === "Bra — jag har nog nu. Analyserar idén.") return normalized;
+  const max = 220;
+  const sliced = normalized.length <= max ? normalized : normalized.slice(0, max);
+  if (normalized.length <= max) return /[?.!]$/.test(sliced) ? sliced : `${sliced}?`;
+  const boundary = Math.max(
+    sliced.lastIndexOf(". "),
+    sliced.lastIndexOf("? "),
+    sliced.lastIndexOf("! "),
+    sliced.lastIndexOf("; "),
+    sliced.lastIndexOf(", "),
+    sliced.lastIndexOf(" ")
+  );
+  const safe = sliced.slice(0, boundary > 80 ? boundary : max).trim();
+  return /[?.!]$/.test(safe) ? safe : `${safe}?`;
 }
 
 export async function POST(req: NextRequest) {
@@ -91,7 +109,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.6, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.4, maxOutputTokens: 256 },
         }),
       }
     );
@@ -125,6 +143,8 @@ export async function POST(req: NextRequest) {
       auditTriggered: false,
     };
   }
+
+  parsed.question = finalizeQuestion(parsed.question, "Kan du berätta mer om idén?");
 
   if (parsed.turnNumber >= 5 && !parsed.done) {
     parsed.done = true;
