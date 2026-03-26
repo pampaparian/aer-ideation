@@ -9,6 +9,9 @@ export const runtime = "edge";
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
+const MAX_HISTORY_MESSAGES = 6;
+const MAX_MESSAGE_CHARS = 500;
+const GEMINI_TIMEOUT_MS = 9000;
 
 const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
 
@@ -67,6 +70,19 @@ function plainTextResponse(text: string, status = 200) {
   });
 }
 
+function truncateText(text: string, limit = MAX_MESSAGE_CHARS) {
+  const normalized = text.trim().replace(/\s+/g, " ");
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1)}…`;
+}
+
+function buildHistoryContents(history: DialogMessage[]) {
+  return history.slice(-MAX_HISTORY_MESSAGES).map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: truncateText(m.text) }],
+  }));
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, route: "/api/dialog" });
 }
@@ -89,17 +105,17 @@ export async function POST(req: NextRequest) {
     return plainTextResponse("Ide saknas", 400);
   }
 
-  const historyContents = history.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.text }],
-  }));
+  const historyContents = buildHistoryContents(history);
 
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${idea}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
+      ? `Ide: ${truncateText(idea, 1200)}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
       : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa historiken ovan.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
   let geminiResp: Response;
   try {
@@ -108,6 +124,7 @@ export async function POST(req: NextRequest) {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
@@ -116,7 +133,12 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (fetchErr) {
+    if (controller.signal.aborted) {
+      return plainTextResponse("Kan du utveckla det lite mer?", 200);
+    }
     return plainTextResponse(`Natverksfel: ${String(fetchErr)}`, 502);
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!geminiResp.ok) {
