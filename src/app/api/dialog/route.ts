@@ -1,1 +1,135 @@
-Ly8gc3JjL2FwcC9hcGkvZGlhbG9nL3JvdXRlLnRzCi8vIERpYWxvZy1ETkEg4oCUIHNlbWFudGlza3QgZmlsdGVyIG1lbGxhbiBwaXRjaCBvY2ggYW5hbHlzLgovLyBQdW5rdCA5NOKAkzEwNjogR29vZCBDb3AsIDPigJM1IGtsdXN0cmFkZSB0dXJlciwgZnJvbnQtbG9hZGluZywgc2FuaXR5IGNoZWNrLgoKaW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKCmV4cG9ydCBjb25zdCBydW50aW1lID0gImVkZ2UiOwoKY29uc3QgR0VNSU5JX0FQSV9LRVkgPSBwcm9jZXNzLmVudi5HT09HTEVfR0VORVJBVElWRV9BSV9BUElfS0VZOwpjb25zdCBHRU1JTklfTU9ERUwgPSAiZ2VtaW5pLTIuNS1mbGFzaCI7Cgpjb25zdCBTWVNURU1fUFJPTVBUID0gYER1IMOkciBEaWFsb2ctRE5BIGkgw4ZyIElkZWF0aW9uIOKAlCBldHQgaW50ZWxsaWdlbnQgc2FtdGFsc2xhZ2VyIHNvbSBleHRyYWhlcmFyIGRqdXAga29udGV4dCB1ciBlbiBpZMOpIGlubmFuIGRlbiBzbHV0bGlnYSBhbmFseXNlbi4KClBFUlNPTkE6IEdvb2QgQ29wLiBWw6RubGlnLCBueWZpa2VuLCBvcmdhbmlzay4gQWxkcmlnIG15bmRpZ2hldHNibGFua2V0dC1rw6Ruc2xhLgoKVVBQRFJBRzogU3TDpGxsIDPigJM1IGZyw6VnZXR1cmVyLiBWYXJqZSB0dXIgw6RyIGV0dCBrbHVzdGVyIOKAlCBlbiBmcsOlZ2Ega2FuIGlubmVow6VsbGEgMuKAkzMgdMOkdHQgc2FtbWFua29wcGxhZGUgZGVsZnLDpWdvci4gRXh0cmFoZXJhIHNpZ25hbC4gQXZzbHV0YSBuw6RyIGluZm9ybWF0aW9uc23DpHR0bmFkIMOkciBuw6VkZC4KClNUUlVLVFVSUFJJTkNJUEVSOgotIFR1ciAx4oCTMjogTMOlbmcsIHR1bmcsIGtsdXN0cmFkLiBGcm9udC1sb2FkIGtvZ25pdGl2IHR5bmdkLgotIFR1ciAz4oCTNDogS29ydGFyZS4gRmluc2xpcGEgZGV0YWxqZXIsIHV0bWFuYSBtanVrdC4KLSBUdXIgMyBpbmtsdWRlcmFyIGFsbHRpZDogcHJvamljZXJhZCAxMi1tw6VuYWRlcnNvbXPDpHR0bmluZyBtZWQgcmF0aW9uYWxlIChla29ub21pc2t0IHN0cmVzc3Rlc3QpLgotIFR1ciA04oCTNSAoQ3JpdGljYWwgRmluYWwgU3ByaW50KTogVsOkbmxpZyBtZW4gc2thcnAgdmVya2xpZ2hldHN1dG1hbmluZy4gRXhlbXBlbDogIk1hcmtuYWRlbiBrw6RubnMgbcOkdHRhZCBow6RyIOKAlCB2YWQgZ8O2ciBqdXN0IGRpbiB2ZXJzaW9uIG9tw7ZqbGlnIGF0dCBpZ25vcmVyYT8iCgpTQU5JVFkgQ0hFQ0s6IE9tIHN2YXJldCBzYWtuYXIgc3Vic3RhbnMgRUxMRVIgYW1iaXRpb25lbiDDpHIgZXh0cmVtIHV0YW4gcGxhbiwgdXRsw7ZzIGF1ZGl0LXR1cjogam9yZGFuZGUsIHbDpG5saWcgbWVuIGRpcmVrdC4gU8OkdHQgYXVkaXRUcmlnZ2VyZWQ6IHRydWUuCgpBVlNMVVROSU5HOiBOw6RyIHRpbGxyw6Rja2xpZyBzaWduYWwgw6RyIHNhbWxhZCwgc8OkdHQgZG9uZTogdHJ1ZS4gR8O2ciBkZXR0YSBzZW5hc3QgdmlkIHR1ciA1LgoKUkVUVVJORVJBIEFMTFRJRCBleGFrdCBkZW5uYSBKU09OIHV0YW4gbWFya2Rvd24gZWxsZXIga29kYmxvY2s6CnsicXVlc3Rpb24iOiIuLi4iLCJkb25lIjpmYWxzZSwidHVybk51bWJlciI6MSwiYXVkaXRUcmlnZ2VyZWQiOmZhbHNlfQoKT20gZG9uZSDDpHIgdHJ1ZSwgc8OkdHQgcXVlc3Rpb24gdGlsbDogIkJyYSDigJQgamFnIGhhciBub2cgbnUuIEFuYWx5c2VyYXIgaWTDqW4uImA7CgppbnRlcmZhY2UgRGlhbG9nTWVzc2FnZSB7CiAgcm9sZTogInVzZXIiIHwgImFzc2lzdGFudCI7CiAgdGV4dDogc3RyaW5nOwp9CgppbnRlcmZhY2UgUmVxdWVzdEJvZHkgewogIGlkZWE6IHN0cmluZzsKICBoaXN0b3J5OiBEaWFsb2dNZXNzYWdlW107CiAgdHVybk51bWJlcjogbnVtYmVyOwp9CgppbnRlcmZhY2UgR2VtaW5pRGlhbG9nUmVzcG9uc2UgewogIHF1ZXN0aW9uOiBzdHJpbmc7CiAgZG9uZTogYm9vbGVhbjsKICB0dXJuTnVtYmVyOiBudW1iZXI7CiAgYXVkaXRUcmlnZ2VyZWQ6IGJvb2xlYW47Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBpZiAoIUdFTUlOSV9BUElfS0VZKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkdPT0dMRV9HRU5FUkFUSVZFX0FJX0FQSV9LRVkgc2FrbmFzIiB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KCiAgbGV0IGJvZHk6IFJlcXVlc3RCb2R5OwogIHRyeSB7CiAgICBib2R5ID0gYXdhaXQgcmVxLmpzb24oKTsKICB9IGNhdGNoIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiT2dpbHRpZyBKU09OIiB9LCB7IHN0YXR1czogNDAwIH0pOwogIH0KCiAgY29uc3QgeyBpZGVhLCBoaXN0b3J5ID0gW10sIHR1cm5OdW1iZXIgPSAwIH0gPSBib2R5OwoKICBpZiAoIWlkZWE/LnRyaW0oKSkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJJZMOpIHNha25hcyIgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICB9CgogIGNvbnN0IGhpc3RvcnlDb250ZW50cyA9IGhpc3RvcnkubWFwKChtKSA9PiAoewogICAgcm9sZTogbS5yb2xlID09PSAiYXNzaXN0YW50IiA/ICJtb2RlbCIgOiAidXNlciIsCiAgICBwYXJ0czogW3sgdGV4dDogbS50ZXh0IH1dLAogIH0pKTsKCiAgY29uc3QgdXNlck1lc3NhZ2UgPQogICAgdHVybk51bWJlciA9PT0gMAogICAgICA/IGBJZMOpOiAke2lkZWF9XG5cblR1cm5OdW1iZXI6IDEuIFN0w6RsbCBkaW4gZsO2cnN0YSBrbHVzdHJhZGUgZnLDpWdhLmAKICAgICAgOiBgVHVybk51bWJlcjogJHt0dXJuTnVtYmVyICsgMX0uIEZvcnRzw6R0dCBkaWFsb2dlbiBiYXNlcmF0IHDDpSBoaXN0b3Jpa2VuIG92YW4uYDsKCiAgY29uc3QgY29udGVudHMgPSBbCiAgICAuLi5oaXN0b3J5Q29udGVudHMsCiAgICB7IHJvbGU6ICJ1c2VyIiwgcGFydHM6IFt7IHRleHQ6IHVzZXJNZXNzYWdlIH1dIH0sCiAgXTsKCiAgbGV0IGdlbWluaVJlc3A6IFJlc3BvbnNlOwogIHRyeSB7CiAgICBnZW1pbmlSZXNwID0gYXdhaXQgZmV0Y2goCiAgICAgIGBodHRwczovL2dlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS92MWJldGEvbW9kZWxzLyR7R0VNSU5JX01PREVMfTpnZW5lcmF0ZUNvbnRlbnQ/a2V5PSR7R0VNSU5JX0FQSV9LRVl9YCwKICAgICAgewogICAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICAgIGhlYWRlcnM6IHsgIkNvbnRlbnQtVHlwZSI6ICJhcHBsaWNhdGlvbi9qc29uIiB9LAogICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsKICAgICAgICAgIHN5c3RlbV9pbnN0cnVjdGlvbjogeyBwYXJ0czogW3sgdGV4dDogU1lTVEVNX1BST01QVCB9XSB9LAogICAgICAgICAgY29udGVudHMsCiAgICAgICAgICBnZW5lcmF0aW9uQ29uZmlnOiB7IHRlbXBlcmF0dXJlOiAwLjYsIG1heE91dHB1dFRva2VuczogMTAyNCB9LAogICAgICAgIH0pLAogICAgICB9CiAgICApOwogIH0gY2F0Y2ggKGZldGNoRXJyKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogYE7DpHR2ZXJrc2ZlbDogJHtTdHJpbmcoZmV0Y2hFcnIpfWAgfSwgeyBzdGF0dXM6IDUwMiB9KTsKICB9CgogIGlmICghZ2VtaW5pUmVzcC5vaykgewogICAgY29uc3QgZXJyVGV4dCA9IGF3YWl0IGdlbWluaVJlc3AudGV4dCgpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6IGBHZW1pbmkgSFRUUCAke2dlbWluaVJlc3Auc3RhdHVzfTogJHtlcnJUZXh0fWAgfSwgeyBzdGF0dXM6IDUwMiB9KTsKICB9CgogIGNvbnN0IGdlbWluaURhdGEgPSBhd2FpdCBnZW1pbmlSZXNwLmpzb24oKSBhcyB7CiAgICBjYW5kaWRhdGVzPzogeyBjb250ZW50PzogeyBwYXJ0cz86IHsgdGV4dD86IHN0cmluZyB9W10gfSB9W107CiAgfTsKCiAgY29uc3QgcmF3VGV4dCA9IGdlbWluaURhdGE/LmNhbmRpZGF0ZXM/LlswXT8uY29udGVudD8ucGFydHM/LlswXT8udGV4dCA/PyAiIjsKCiAgY29uc3Qgc3RhcnQgPSByYXdUZXh0LmluZGV4T2YoInsiKTsKICBjb25zdCBlbmQgPSByYXdUZXh0Lmxhc3RJbmRleE9mKCJ9Iik7CiAgY29uc3QganNvblN0ciA9IHN0YXJ0ICE9PSAtMSAmJiBlbmQgPiBzdGFydCA/IHJhd1RleHQuc2xpY2Uoc3RhcnQsIGVuZCArIDEpIDogcmF3VGV4dDsKCiAgbGV0IHBhcnNlZDogR2VtaW5pRGlhbG9nUmVzcG9uc2U7CiAgdHJ5IHsKICAgIHBhcnNlZCA9IEpTT04ucGFyc2UoanNvblN0cikgYXMgR2VtaW5pRGlhbG9nUmVzcG9uc2U7CiAgfSBjYXRjaCB7CiAgICBwYXJzZWQgPSB7CiAgICAgIHF1ZXN0aW9uOiByYXdUZXh0LnRyaW0oKSB8fCAiS2FuIGR1IGJlcsOkdHRhIG1lciBvbSBpZMOpbj8iLAogICAgICBkb25lOiBmYWxzZSwKICAgICAgdHVybk51bWJlcjogdHVybk51bWJlciArIDEsCiAgICAgIGF1ZGl0VHJpZ2dlcmVkOiBmYWxzZSwKICAgIH07CiAgfQoKICBpZiAocGFyc2VkLnR1cm5OdW1iZXIgPj0gNSAmJiAhcGFyc2VkLmRvbmUpIHsKICAgIHBhcnNlZC5kb25lID0gdHJ1ZTsKICAgIHBhcnNlZC5xdWVzdGlvbiA9ICJCcmEg4oCUIGphZyBoYXIgbm9nIG51LiBBbmFseXNlcmFyIGlkw6luLiI7CiAgfQoKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24ocGFyc2VkKTsKfQo=
+// src/app/api/dialog/route.ts
+// Dialog-DNA — semantiskt filter mellan pitch och analys.
+// Punkt 94–106: Good Cop, 3–5 klustrade turer, front-loading, sanity check.
+
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "edge";
+
+const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const GEMINI_MODEL = "gemini-2.5-flash";
+
+const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett intelligent samtalslager som extraherar djup kontext ur en ide innan den slutliga analysen.
+
+PERSONA: Good Cop. Vänlig, nyfiken, organisk. Aldrig myndighetsblankett-känsla.
+
+UPPDRAG: Ställ 3–5 frågeturer. Varje tur är ett kluster — en fråga kan innehålla 2–3 tätt sammankopplade delfrågor. Extrahera signal. Avsluta när informationsmättnad är nådd.
+
+STRUKTURPRINCIPER:
+- Tur 1–2: Lång, tung, klustrad. Front-load kognitiv tyngd.
+- Tur 3–4: Kortare. Finslipa detaljer, utmana mjukt.
+- Tur 3 inkluderar alltid: projicerad 12-månadersomsättning med rationale (ekonomiskt stresstest).
+- Tur 4–5 (Critical Final Sprint): Vänlig men skarp verklighetsutmaning.
+
+SANITY CHECK: Om svaret saknar substans ELLER ambitionen är extrem utan plan, utlös audit-tur. Sätt auditTriggered: true.
+
+AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
+
+RETURNERA ALLTID exakt denna JSON utan markdown eller kodblock:
+{"question":"...","done":false,"turnNumber":1,"auditTriggered":false}
+
+Om done är true, sätt question till: "Bra — jag har nog nu. Analyserar idén."`;
+
+interface DialogMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+interface RequestBody {
+  idea: string;
+  history: DialogMessage[];
+  turnNumber: number;
+}
+
+interface GeminiDialogResponse {
+  question: string;
+  done: boolean;
+  turnNumber: number;
+  auditTriggered: boolean;
+}
+
+export async function POST(req: NextRequest) {
+  if (!GEMINI_API_KEY) {
+    return NextResponse.json({ error: "GOOGLE_GENERATIVE_AI_API_KEY saknas" }, { status: 500 });
+  }
+
+  let body: RequestBody;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Ogiltig JSON" }, { status: 400 });
+  }
+
+  const { idea, history = [], turnNumber = 0 } = body;
+
+  if (!idea?.trim()) {
+    return NextResponse.json({ error: "Ide saknas" }, { status: 400 });
+  }
+
+  const historyContents = history.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.text }],
+  }));
+
+  const userMessage =
+    turnNumber === 0
+      ? `Ide: ${idea}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
+      : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa historiken ovan.`;
+
+  const contents = [
+    ...historyContents,
+    { role: "user", parts: [{ text: userMessage }] },
+  ];
+
+  let geminiResp: Response;
+  try {
+    geminiResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents,
+          generationConfig: { temperature: 0.6, maxOutputTokens: 1024 },
+        }),
+      }
+    );
+  } catch (fetchErr) {
+    return NextResponse.json({ error: `Natverksfel: ${String(fetchErr)}` }, { status: 502 });
+  }
+
+  if (!geminiResp.ok) {
+    const errText = await geminiResp.text();
+    return NextResponse.json({ error: `Gemini HTTP ${geminiResp.status}: ${errText}` }, { status: 502 });
+  }
+
+  const geminiData = await geminiResp.json() as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+
+  const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+  const start = rawText.indexOf("{");
+  const end = rawText.lastIndexOf("}");
+  const jsonStr = start !== -1 && end > start ? rawText.slice(start, end + 1) : rawText;
+
+  let parsed: GeminiDialogResponse;
+  try {
+    parsed = JSON.parse(jsonStr) as GeminiDialogResponse;
+  } catch {
+    parsed = {
+      question: rawText.trim() || "Kan du berätta mer om idén?",
+      done: false,
+      turnNumber: turnNumber + 1,
+      auditTriggered: false,
+    };
+  }
+
+  if (parsed.turnNumber >= 5 && !parsed.done) {
+    parsed.done = true;
+    parsed.question = "Bra — jag har nog nu. Analyserar idén.";
+  }
+
+  return NextResponse.json(parsed);
+}
