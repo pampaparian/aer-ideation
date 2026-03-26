@@ -9,9 +9,10 @@ export const runtime = "edge";
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
-const MAX_HISTORY_MESSAGES = 6;
-const MAX_MESSAGE_CHARS = 500;
-const GEMINI_TIMEOUT_MS = 9000;
+const MAX_HISTORY_MESSAGES = 4;
+const MAX_MESSAGE_CHARS = 300;
+const GEMINI_TIMEOUT_MS = 12000;
+const FALLBACK_QUESTION = "Kan du utveckla det lite mer?";
 
 const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
 
@@ -84,12 +85,12 @@ function buildHistoryContents(history: DialogMessage[]) {
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, route: "/api/dialog" });
+  return NextResponse.json({ ok: true, route: "/api/dialog", runtime });
 }
 
 export async function POST(req: NextRequest) {
   if (!GEMINI_API_KEY) {
-    return plainTextResponse("GOOGLE_GENERATIVE_AI_API_KEY saknas", 500);
+    return plainTextResponse(FALLBACK_QUESTION, 200);
   }
 
   let body: RequestBody;
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
 
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${truncateText(idea, 1200)}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
+      ? `Ide: ${truncateText(idea, 1000)}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
       : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa historiken ovan.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
@@ -117,9 +118,8 @@ export async function POST(req: NextRequest) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
-  let geminiResp: Response;
   try {
-    geminiResp = await fetch(
+    const geminiResp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
@@ -132,28 +132,23 @@ export async function POST(req: NextRequest) {
         }),
       }
     );
-  } catch (fetchErr) {
-    if (controller.signal.aborted) {
-      return plainTextResponse("Kan du utveckla det lite mer?", 200);
+
+    if (!geminiResp.ok) {
+      return plainTextResponse(FALLBACK_QUESTION, 200);
     }
-    return plainTextResponse(`Natverksfel: ${String(fetchErr)}`, 502);
+
+    const geminiData = (await geminiResp.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+
+    const rawText =
+      geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+
+    const responseText = finalizeQuestion(rawText || FALLBACK_QUESTION, FALLBACK_QUESTION);
+    return plainTextResponse(responseText);
+  } catch {
+    return plainTextResponse(FALLBACK_QUESTION, 200);
   } finally {
     clearTimeout(timeout);
   }
-
-  if (!geminiResp.ok) {
-    const errText = await geminiResp.text();
-    return plainTextResponse(`Gemini HTTP ${geminiResp.status}: ${errText}`, 502);
-  }
-
-  const geminiData = (await geminiResp.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-
-  const rawText =
-    geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
-
-  const responseText = finalizeQuestion(rawText || "Kan du berätta mer om idén?", "Kan du berätta mer om idén?");
-
-  return plainTextResponse(responseText);
 }
