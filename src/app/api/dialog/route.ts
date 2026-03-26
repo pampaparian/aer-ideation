@@ -9,35 +9,22 @@ export const runtime = "edge";
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
-const MAX_HISTORY_MESSAGES = 4;
-const MAX_MESSAGE_CHARS = 260;
+const MAX_HISTORY_MESSAGES = 2;
+const MAX_MESSAGE_CHARS = 180;
 const GEMINI_TIMEOUT_MS = 12000;
 
-const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
+const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
-PERSONA: Good Cop. Vänlig, nyfiken, organisk.
+Rollen är Good Cop: varm, nyfiken och naturlig.
 
-UPPDRAG: Ställ 3–5 korta, klustrade frågor. Håll varje fråga under 220 tecken om möjligt. Extrahera signal snabbt och avsluta när informationsmättnad är nådd.
+Regler:
+- Ställ exakt en kort ny fråga.
+- Svara bara med frågetext eller avslutsfras.
+- Återanvänd inte ord från idén eller tidigare svar.
+- Inga listor, inga taggar, inga JSON-strukturer, inga citat.
+- Håll frågan kort och konkret.
 
-VIKTIGT:
-- Ställ exakt en ny fråga per tur.
-- Återanvänd inte formuleringar från idén eller tidigare svar.
-- Citatera inte användarens text.
-- Svara endast med ren fråga eller avslutsfras.
-
-STRUKTUR:
-- Tur 1–2: lite längre, men fortfarande tighta.
-- Tur 3–4: kortare och mer riktade.
-- Tur 3 ska alltid innehålla en enkel 12-månadersbild om det finns tillräckligt med underlag.
-- Tur 4–5: vänlig men tydlig verklighetskontroll.
-
-SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, sätt auditTriggered: true.
-
-AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
-
-Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and do NOT use any structural tags.
-
-Om done är true, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
+När tillräcklig signal finns, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
 
 interface DialogMessage {
   role: "user" | "assistant";
@@ -54,51 +41,29 @@ function normalizeText(text: string): string {
   return text.trim().replace(/\s+/g, " ");
 }
 
-function dedupeRepeatedPhrases(text: string): string {
+function stripEchoes(text: string): string {
   const normalized = normalizeText(text);
-  const marker = " eller annorlunda: ";
-  const idx = normalized.toLowerCase().indexOf(marker);
-  if (idx !== -1) {
-    return normalizeText(normalized.slice(0, idx));
-  }
-
-  const parts = normalized.split(/\s{2,}|[|]/).map((part) => part.trim()).filter(Boolean);
-  if (parts.length >= 2 && parts[0] === parts[1]) {
-    return parts[0];
-  }
-
-  const sentenceParts = normalized.split(/(?<=[?.!])\s+/);
-  if (sentenceParts.length >= 2) {
-    const unique: string[] = [];
-    for (const sentence of sentenceParts) {
-      const trimmed = sentence.trim();
-      if (!trimmed) continue;
-      if (unique.includes(trimmed)) continue;
-      unique.push(trimmed);
+  const markers = [" eller annorlunda:", " - eller annorlunda:", "\n"]; 
+  let result = normalized;
+  for (const marker of markers) {
+    const idx = result.toLowerCase().indexOf(marker.trim().toLowerCase());
+    if (idx > 0 && marker.includes("annorlunda")) {
+      result = result.slice(0, idx).trim();
     }
-    return unique.join(" ");
   }
-
-  return normalized;
+  const doubled = result.match(/^(.*?)(?:\s+\1)+$/i);
+  if (doubled?.[1]) return doubled[1].trim();
+  return result;
 }
 
 function finalizeQuestion(question: string, fallback: string): string {
-  const normalized = dedupeRepeatedPhrases(question);
+  const normalized = stripEchoes(question);
   if (!normalized) return fallback;
   if (normalized === DONE_MESSAGE) return normalized;
   const max = 220;
   const sliced = normalized.length <= max ? normalized : normalized.slice(0, max);
-  if (normalized.length <= max) return /[?.!]$/.test(sliced) ? sliced : `${sliced}?`;
-  const boundary = Math.max(
-    sliced.lastIndexOf(". "),
-    sliced.lastIndexOf("? "),
-    sliced.lastIndexOf("! "),
-    sliced.lastIndexOf("; "),
-    sliced.lastIndexOf(", "),
-    sliced.lastIndexOf(" ")
-  );
-  const safe = sliced.slice(0, boundary > 80 ? boundary : max).trim();
-  return /[?.!]$/.test(safe) ? safe : `${safe}?`;
+  const trimmed = sliced.trim();
+  return /[?.!]$/.test(trimmed) ? trimmed : `${trimmed}?`;
 }
 
 function plainTextResponse(text: string, status = 200) {
@@ -126,18 +91,14 @@ function buildHistoryContents(history: DialogMessage[]) {
 
 function fallbackQuestion(turnNumber: number) {
   const questions = [
-    "Vad är den viktigaste kärnan i idén?",
-    "Vem är detta mest för?",
-    "Vilket problem vill du lösa först?",
-    "Vad är den största risk du ser just nu?",
-    "Hur skulle du märka om detta fungerar om 12 månader?",
+    "Vad i idén känns mest levande just nu?",
+    "Vad skulle du vilja förstå lite bättre först?",
+    "Om du följer den känslan ett steg till, vart leder den?",
+    "Vad tror du kommer överraska dig mest här?",
+    "Om vi zoomar ut ett år, vad hoppas du att det har blivit då?",
   ];
 
   return questions[Math.min(turnNumber, questions.length - 1)];
-}
-
-function safeFallback(turnNumber: number) {
-  return fallbackQuestion(turnNumber);
 }
 
 export async function GET() {
@@ -158,18 +119,17 @@ export async function POST(req: NextRequest) {
     return plainTextResponse("Ide saknas", 400);
   }
 
-  const fallback = safeFallback(turnNumber);
+  const fallback = fallbackQuestion(turnNumber);
 
   if (!GEMINI_API_KEY) {
     return plainTextResponse(fallback, 200);
   }
 
   const historyContents = buildHistoryContents(history);
-
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${truncateText(idea, 900)}\n\nTurnNumber: 1. Stall en ny, kort klustrad fraga.`
-      : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa tidigare user-svar.`;
+      ? `Ide: ${truncateText(idea, 700)}\nStäll en kort, varm följdfråga.`
+      : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny, kort fråga utifrån senaste svaret.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
 
@@ -186,7 +146,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.25, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
         }),
       }
     );
