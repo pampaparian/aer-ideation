@@ -1,1 +1,46 @@
-Ly8gc3JjL3R5cGVzL2JsYW5rZXR0LnRzCi8vIERlbiBmw7ZyZ3lsbGRhIGJsYW5rZXR0ZW4g4oCUIMOGciBJZGVhdGlvbnMgc3RhbmRhcmRpc2VyYWRlIGt2aXR0by9sZXZlcmFucy4KCmV4cG9ydCBpbnRlcmZhY2UgUmVhbGlzYXRpb25QbGFuIHsKICBmb3JtYXQ6IHN0cmluZwogIGNoYW5uZWw6IHN0cmluZwogIHNlZ21lbnQ6IHN0cmluZwogIHRpbWVsaW5lOiBzdHJpbmcKfQoKZXhwb3J0IGludGVyZmFjZSBTY29yZURpbWVuc2lvbiB7CiAgc2NvcmU6IG51bWJlcgogIHJhdGlvbmFsZTogc3RyaW5nCn0KCmV4cG9ydCBpbnRlcmZhY2UgQnVzaW5lc3NTY29yZSB7CiAgdG90YWw6IG51bWJlcgogIGFwcHJvdmVkOiBib29sZWFuCiAgYnJlYWtkb3duOiB7CiAgICBvcmlnaW5hbGl0eTogU2NvcmVEaW1lbnNpb24KICAgIG1hcmtldFJlY2VwdGl2aXR5OiBTY29yZURpbWVuc2lvbgogICAgcmVhbGlzYWJpbGl0eTogU2NvcmVEaW1lbnNpb24KICAgIGVjb3N5c3RlbVN5bmVyZ3k6IFNjb3JlRGltZW5zaW9uCiAgICBhZXN0aGV0aWNUcmFuc2Zvcm1hdGlvbjogU2NvcmVEaW1lbnNpb24KICB9CiAgdmVyZGljdDogc3RyaW5nCiAgaXRlcmF0aW9uTm90ZT86IHN0cmluZwp9CgpleHBvcnQgaW50ZXJmYWNlIEJsYW5rZXR0IHsKICBsYWJlbDogIsOGUiBJREVBVElPTiDigJQgQsOEUklHSEVUU0FOQUxZUyIKICB2ZXJzaW9uOiAiMS4wIgogIHRpbWVzdGFtcDogc3RyaW5nCiAgaWRlYVRpdGxlOiBzdHJpbmcKICBpZGVhRGVzY3JpcHRpb246IHN0cmluZwogIGRvbWFpbjogc3RyaW5nCiAgZ2VuZWFsb2d5OiBzdHJpbmcKICByZWFsaXNhdGlvblBsYW46IFJlYWxpc2F0aW9uUGxhbgogIHNjb3JlOiBCdXNpbmVzc1Njb3JlCn0KCmV4cG9ydCBpbnRlcmZhY2UgRGlhbG9nVHVybiB7CiAgcm9sZTogInVzZXIiIHwgImFzc2lzdGFudCIKICB0ZXh0OiBzdHJpbmcKfQoKZXhwb3J0IHR5cGUgQXBwUGhhc2UgPSAiaW5wdXQiIHwgImRpYWxvZyIgfCAiYW5hbHl6aW5nIiB8ICJyZXN1bHQiCg==
+// src/types/blankett.ts
+
+export interface RealisationPlan {
+  format: string
+  channel: string
+  segment: string
+  timeline: string
+}
+
+export interface ScoreDimension {
+  score: number
+  rationale: string
+}
+
+export interface BusinessScore {
+  total: number
+  approved: boolean
+  breakdown: {
+    originality: ScoreDimension
+    marketReceptivity: ScoreDimension
+    realisability: ScoreDimension
+    ecosystemSynergy: ScoreDimension
+    aestheticTransformation: ScoreDimension
+  }
+  verdict: string
+  iterationNote?: string
+}
+
+export interface Blankett {
+  label: "ÆR IDEATION — BÄRIGHETSANALYS"
+  version: "1.0"
+  timestamp: string
+  ideaTitle: string
+  ideaDescription: string
+  domain: string
+  genealogy: string
+  realisationPlan: RealisationPlan
+  score: BusinessScore
+}
+
+export interface DialogTurn {
+  role: "user" | "assistant"
+  text: string
+}
+
+export type AppPhase = "input" | "dialog" | "analyzing" | "result"
