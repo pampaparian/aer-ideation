@@ -9,15 +9,21 @@ export interface RealisationPlan {
   timeline: string         // t.ex. "12 månader till första utgåva"
 }
 
+/** En enskild scoring-dimension med poäng och motivering */
+export interface ScoreDimension {
+  score: number            // 0–20
+  rationale: string        // Skarp motivering i 1 mening
+}
+
 export interface BusinessScore {
   total: number            // 0–100
   approved: boolean        // true om total >= 70
   breakdown: {
-    originality: number            // 0–20: Hur distinkt från befintlig
-    marketReceptivity: number      // 0–20: Verklig efterfrågesignal
-    realisability: number          // 0–20: Kan faktiskt byggas/genomföras
-    ecosystemSynergy: number       // 0–20: Ärver från Davids befintliga
-    aestheticTransformation: number // 0–20: Ej generisk; estetiskt transformerad
+    originality: ScoreDimension            // Hur distinkt från befintlig marknad
+    marketReceptivity: ScoreDimension      // Verklig efterfrågesignal
+    realisability: ScoreDimension          // Kan faktiskt byggas/genomföras
+    ecosystemSynergy: ScoreDimension       // Ärver från Davids befintliga
+    aestheticTransformation: ScoreDimension // Ej generisk; estetiskt transformerad
   }
   verdict: string          // En auktoritativ mening
   iterationNote?: string   // Endast om approved === false
