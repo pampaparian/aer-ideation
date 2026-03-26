@@ -1,312 +1,146 @@
+/* src/app/page.module.css */
+/* Tvåruters dialog-layout. Punkt 64: oklanderlig estetik. */
+
 .main {
-  min-height: 100vh;
-  background: #f5f4f0;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  color: #0a0a0a;
+  padding: 2rem 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
-/* ─ HEADER ─ */
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px 40px;
-  border-bottom: 0.25px solid rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  background: #f5f4f0;
-  z-index: 10;
+  justify-content: center;
+  padding-bottom: 2rem;
 }
-.headerLeft  { display: flex; align-items: baseline; gap: 14px; }
-.headerRight { display: flex; align-items: center; gap: 22px; }
+
 .wordmark {
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.slot {
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  color: rgba(0,0,0,0.22);
-}
-.navBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  color: rgba(0,0,0,0.28);
-  padding: 0;
-  transition: color 100ms;
-}
-.navBtn:hover { color: #0a0a0a; }
-
-/* ─ INPUT ─ */
-.inputStage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-}
-.inputWrap {
-  display: flex;
-  align-items: stretch;
-  border: 0.25px solid rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 320px;
-  background: #fff;
-}
-.input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-family: inherit;
-  font-size: 14px;
-  color: #0a0a0a;
-  background: transparent;
-  padding: 12px 16px;
-  letter-spacing: 0.01em;
-}
-.input::placeholder { color: rgba(0,0,0,0.16); font-style: italic; }
-.submitBtn {
-  background: #0a0a0a;
-  color: #f5f4f0;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 18px;
-  padding: 0 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 80ms;
-  line-height: 1;
-}
-.submitBtn:disabled { opacity: 0.15; cursor: default; }
-.submitBtn:hover:not(:disabled) { opacity: 0.7; }
-.error {
-  font-size: 9px;
-  color: rgba(0,0,0,0.3);
-  letter-spacing: 0.08em;
-  margin-top: 12px;
-}
-
-/* ─ LOADING ─ */
-.centerStage {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.pulseDot {
-  display: block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.25);
-  animation: pulseDot 1.2s ease-in-out infinite;
-}
-@keyframes pulseDot {
-  0%, 100% { opacity: 0.1; transform: scale(0.7); }
-  50%       { opacity: 0.45; transform: scale(1.4); }
-}
-
-/* ─ ARENA ─ */
-.arena {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 44px 56px;
-  overflow: hidden;
-}
-
-/* ─ TRAIL — the leftward history, physically clickable ─ */
-.trail {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin-bottom: 40px;
-  opacity: 0.2;
-  transition: opacity 200ms;
-}
-.trail:hover { opacity: 0.45; }
-.trailItem { display: flex; align-items: center; gap: 5px; }
-.trailBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 9px;
-  letter-spacing: 0.07em;
-  color: #0a0a0a;
-  padding: 0;
-  border-bottom: 0.25px solid transparent;
-  transition: border-color 100ms;
-}
-.trailBtn:hover { border-bottom-color: rgba(0,0,0,0.4); }
-.trailSep {
-  font-size: 8px;
-  color: rgba(0,0,0,0.3);
-}
-
-/* ─ NODE ROW ─ */
-.nodeRow {
-  display: flex;
-  align-items: center;
-}
-
-/* ─ NUCLEUS ─ */
-@keyframes nucleusIn {
-  from { opacity: 0; transform: translateX(22px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes nucleusOut {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(-22px); }
-}
-.nucleus {
-  flex-shrink: 0;
-  max-width: 250px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  animation: nucleusIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.nucleusExiting {
-  animation: nucleusOut 210ms ease forwards !important;
-}
-
-/* Kind label: extreme background, idea is the star */
-.nucleusKind {
-  font-size: 6.5px;
-  font-weight: 400;
+  font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.16);
-}
-.nucleusLabel {
-  font-size: 38px;
-  font-weight: 400;
-  color: #0a0a0a;
-  letter-spacing: -0.03em;
-  line-height: 0.98;
-}
-.nucleusDesc {
-  font-size: 9.5px;
-  color: rgba(0,0,0,0.3);
-  font-style: italic;
-  letter-spacing: 0.01em;
-  line-height: 1.55;
-  max-width: 200px;
-  margin-top: 1px;
+  color: #111;
+  opacity: 0.5;
 }
 
-/* ─ CONNECTING STEM (0.25px) ─ */
-.stemRight {
-  width: 52px;
-  height: 0.25px;
-  background: rgba(0,0,0,0.14);
-  flex-shrink: 0;
+/* ── TVÅRUTERS DIALOG ── */
+.dialog {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  align-items: start;
 }
 
-/* ─ SPLITTING ─ */
-.splittingText {
-  font-size: 7.5px;
-  letter-spacing: 0.24em;
+/* ── PANEL GEMENSAMMA STILAR ── */
+.inputPanel,
+.outputPanel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panelLabel {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(0,0,0,0.15);
-  animation: splittingPulse 1.4s ease-in-out infinite;
-  padding-left: 6px;
-}
-@keyframes splittingPulse {
-  0%, 100% { opacity: 0.1; }
-  50%       { opacity: 0.55; }
+  color: #aaa;
 }
 
-/* ─ RADIAL HOST ─ */
-.radialHost {
-  position: relative;
-  width: 0;
-  height: 0;
-  overflow: visible;
-  flex-shrink: 0;
-}
-
-/* ─ CHILD NODES — radially positioned, no boxes ─ */
-@keyframes childIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.childNode {
-  position: absolute;
-  top: 0;
-  left: 0;
-  /* transform applied inline: translate(x, calc(y - 50%)) */
-  background: none;
-  border: none;
-  cursor: pointer;
+/* ── INPUT ── */
+.textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  font-size: 0.9rem;
   font-family: inherit;
-  text-align: left;
-  padding: 3px 0 3px 8px;
-  opacity: 0;
-  animation-name: childIn;
-  animation-duration: 270ms;
-  animation-timing-function: ease;
-  animation-fill-mode: forwards;
-  transition: opacity 80ms;
-}
-.childNode:hover { opacity: 0.55 !important; }
-
-/* Kind: nearly invisible — category is a filter, not the story */
-.childKind {
-  display: block;
-  font-size: 6px;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,0.15);
-  margin-bottom: 2px;
-}
-.childLabel {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  color: #0a0a0a;
-  letter-spacing: 0.005em;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-.childDesc {
-  display: block;
-  font-size: 8px;
-  color: rgba(0,0,0,0.28);
-  font-style: italic;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  max-width: 160px;
-  white-space: normal;
-  margin-top: 1px;
+  line-height: 1.6;
+  color: #111;
+  background: rgba(255, 255, 255, 0.9);
+  outline: none;
+  transition: border-color 0.15s;
 }
 
-/* ─ RECEIPT TRIGGER ─ */
-.receiptRow { margin-top: 52px; }
-.receiptBtn {
-  background: none;
+.textarea:focus {
+  border-color: #a78bfa;
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.analyzeButton {
+  align-self: flex-start;
+  background: linear-gradient(135deg, #a78bfa, #ec4899);
+  color: #fff;
   border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 8.5px;
-  letter-spacing: 0.13em;
-  color: rgba(0,0,0,0.24);
-  padding: 0;
-  transition: color 100ms;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s, transform 0.1s;
 }
-.receiptBtn:hover { color: rgba(0,0,0,0.7); }
+
+.analyzeButton:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.analyzeButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hint {
+  font-size: 0.68rem;
+  color: #bbb;
+  letter-spacing: 0.02em;
+}
+
+/* ── OUTPUT ── */
+.outputContent {
+  min-height: 200px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.placeholder {
+  font-size: 0.82rem;
+  color: #ccc;
+  align-self: center;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.errorText {
+  font-size: 0.82rem;
+  color: #dc2626;
+  line-height: 1.5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .dialog {
+    grid-template-columns: 1fr;
+  }
+
+  .main {
+    padding: 1.25rem 1rem;
+  }
+}

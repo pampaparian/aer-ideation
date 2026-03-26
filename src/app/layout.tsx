@@ -1,19 +1,19 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'ÆR IDEATION',
-  description: 'Innovationsbiologi — förgrenade noder baserade på din input',
-}
+  title: "Ær Ideation",
+  description: "Bärighetsanalys för Davids idéer",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="sv">
       <body>{children}</body>
     </html>
-  )
+  );
 }
