@@ -9,6 +9,8 @@ import { Blankett } from "@/components/Blankett";
 import type { Blankett as BlankettType, DialogTurn, AppPhase } from "@/types/blankett";
 import styles from "./page.module.css";
 
+const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
+
 export default function Home() {
   const [phase, setPhase] = useState<AppPhase>("input");
   const [idea, setIdea] = useState("");
@@ -16,7 +18,6 @@ export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [userReply, setUserReply] = useState("");
   const [turnNumber, setTurnNumber] = useState(0);
-  const [auditTriggered, setAuditTriggered] = useState(false);
   const [result, setResult] = useState<BlankettType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -43,17 +44,12 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea, history: hist, turnNumber: turn }),
       });
-      if (!res.ok) throw new Error("Dialog-API svarade inte");
-      const data = await res.json() as {
-        question: string;
-        done: boolean;
-        turnNumber: number;
-        auditTriggered: boolean;
-      };
-      setCurrentQuestion(data.question);
-      setTurnNumber(data.turnNumber);
-      setAuditTriggered(data.auditTriggered);
-      if (data.done) {
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || "Dialog-API svarade inte");
+      const question = text.trim();
+      setCurrentQuestion(question);
+      setTurnNumber(turn + 1);
+      if (question === DONE_MESSAGE) {
         setTimeout(() => startAnalysis(hist), 1200);
       }
     } catch {
@@ -111,7 +107,6 @@ export default function Home() {
     setCurrentQuestion("");
     setUserReply("");
     setTurnNumber(0);
-    setAuditTriggered(false);
     setResult(null);
     setError(null);
   }
@@ -166,9 +161,6 @@ export default function Home() {
             ))}
             {currentQuestion && (
               <div className={styles.chatBubbleAI}>
-                {auditTriggered && (
-                  <span className={styles.auditBadge}>Idé-audit</span>
-                )}
                 {currentQuestion}
               </div>
             )}
