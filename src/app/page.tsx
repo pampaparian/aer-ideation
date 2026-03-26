@@ -1,1 +1,236 @@
-Ly8gc3JjL2FwcC9wYWdlLnRzeAovLyDDhnIgSWRlYXRpb24g4oCUIERpYWxvZy1ETkEgZmzDtmRlLgovLyBQdW5rdCA5NOKAkzEwNjogcGl0Y2gg4oaSIGRpYWxvZyAoM+KAkzUgdHVyZXIsIEdvb2QgQ29wKSDihpIgYW5hbHlzIChCYWQgQ29wLWt2aXR0bykuCgoidXNlIGNsaWVudCI7CgppbXBvcnQgeyB1c2VTdGF0ZSwgdXNlUmVmLCB1c2VFZmZlY3QgfSBmcm9tICJyZWFjdCI7CmltcG9ydCB7IEJsYW5rZXR0IH0gZnJvbSAiQC9jb21wb25lbnRzL0JsYW5rZXR0IjsKaW1wb3J0IHR5cGUgeyBCbGFua2V0dCBhcyBCbGFua2V0dFR5cGUsIERpYWxvZ1R1cm4sIEFwcFBoYXNlIH0gZnJvbSAiQC90eXBlcy9ibGFua2V0dCI7CmltcG9ydCBzdHlsZXMgZnJvbSAiLi9wYWdlLm1vZHVsZS5jc3MiOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gSG9tZSgpIHsKICBjb25zdCBbcGhhc2UsIHNldFBoYXNlXSA9IHVzZVN0YXRlPEFwcFBoYXNlPigiaW5wdXQiKTsKCiAgLy8gSW5wdXQtZmFzCiAgY29uc3QgW2lkZWEsIHNldElkZWFdID0gdXNlU3RhdGUoIiIpOwoKICAvLyBEaWFsb2ctZmFzCiAgY29uc3QgW2hpc3RvcnksIHNldEhpc3RvcnldID0gdXNlU3RhdGU8RGlhbG9nVHVybltdPihbXSk7CiAgY29uc3QgW2N1cnJlbnRRdWVzdGlvbiwgc2V0Q3VycmVudFF1ZXN0aW9uXSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbdXNlclJlcGx5LCBzZXRVc2VyUmVwbHldID0gdXNlU3RhdGUoIiIpOwogIGNvbnN0IFt0dXJuTnVtYmVyLCBzZXRUdXJuTnVtYmVyXSA9IHVzZVN0YXRlKDApOwogIGNvbnN0IFthdWRpdFRyaWdnZXJlZCwgc2V0QXVkaXRUcmlnZ2VyZWRdID0gdXNlU3RhdGUoZmFsc2UpOwoKICAvLyBBbmFseXMtZmFzCiAgY29uc3QgW3Jlc3VsdCwgc2V0UmVzdWx0XSA9IHVzZVN0YXRlPEJsYW5rZXR0VHlwZSB8IG51bGw+KG51bGwpOwogIGNvbnN0IFtlcnJvciwgc2V0RXJyb3JdID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbCk7CgogIGNvbnN0IGNoYXRCb3R0b21SZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY2hhdEJvdHRvbVJlZi5jdXJyZW50Py5zY3JvbGxJbnRvVmlldyh7IGJlaGF2aW9yOiAic21vb3RoIiB9KTsKICB9LCBbaGlzdG9yeSwgY3VycmVudFF1ZXN0aW9uXSk7CgogIGFzeW5jIGZ1bmN0aW9uIGhhbmRsZVN0YXJ0RGlhbG9nKCkgewogICAgaWYgKCFpZGVhLnRyaW0oKSkgcmV0dXJuOwogICAgc2V0UGhhc2UoImRpYWxvZyIpOwogICAgc2V0RXJyb3IobnVsbCk7CiAgICBhd2FpdCBmZXRjaE5leHRRdWVzdGlvbihbXSwgMCk7CiAgfQoKICBmdW5jdGlvbiBoYW5kbGVJZGVhS2V5KGU6IFJlYWN0LktleWJvYXJkRXZlbnQ8SFRNTFRleHRBcmVhRWxlbWVudD4pIHsKICAgIGlmIChlLmtleSA9PT0gIkVudGVyIiAmJiAoZS5tZXRhS2V5IHx8IGUuY3RybEtleSkpIGhhbmRsZVN0YXJ0RGlhbG9nKCk7CiAgfQoKICBhc3luYyBmdW5jdGlvbiBmZXRjaE5leHRRdWVzdGlvbihoaXN0OiBEaWFsb2dUdXJuW10sIHR1cm46IG51bWJlcikgewogICAgdHJ5IHsKICAgICAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2goIi9hcGkvZGlhbG9nIiwgewogICAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICAgIGhlYWRlcnM6IHsgIkNvbnRlbnQtVHlwZSI6ICJhcHBsaWNhdGlvbi9qc29uIiB9LAogICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgaWRlYSwgaGlzdG9yeTogaGlzdCwgdHVybk51bWJlcjogdHVybiB9KSwKICAgICAgfSk7CiAgICAgIGlmICghcmVzLm9rKSB0aHJvdyBuZXcgRXJyb3IoIkRpYWxvZy1BUEkgc3ZhcmFkZSBpbnRlIik7CiAgICAgIGNvbnN0IGRhdGEgPSBhd2FpdCByZXMuanNvbigpIGFzIHsKICAgICAgICBxdWVzdGlvbjogc3RyaW5nOwogICAgICAgIGRvbmU6IGJvb2xlYW47CiAgICAgICAgdHVybk51bWJlcjogbnVtYmVyOwogICAgICAgIGF1ZGl0VHJpZ2dlcmVkOiBib29sZWFuOwogICAgICB9OwoKICAgICAgc2V0Q3VycmVudFF1ZXN0aW9uKGRhdGEucXVlc3Rpb24pOwogICAgICBzZXRUdXJuTnVtYmVyKGRhdGEudHVybk51bWJlcik7CiAgICAgIHNldEF1ZGl0VHJpZ2dlcmVkKGRhdGEuYXVkaXRUcmlnZ2VyZWQpOwoKICAgICAgaWYgKGRhdGEuZG9uZSkgewogICAgICAgIHNldFRpbWVvdXQoKCkgPT4gc3RhcnRBbmFseXNpcyhoaXN0KSwgMTIwMCk7CiAgICAgIH0KICAgIH0gY2F0Y2ggewogICAgICBzZXRFcnJvcigiTsOlZ290IGdpY2sgZmVsIGkgZGlhbG9nZmFzZW4uIEbDtnJzw7ZrIGlnZW4uIik7CiAgICB9CiAgfQoKICBhc3luYyBmdW5jdGlvbiBoYW5kbGVTZW5kUmVwbHkoKSB7CiAgICBpZiAoIXVzZXJSZXBseS50cmltKCkgfHwgIWN1cnJlbnRRdWVzdGlvbikgcmV0dXJuOwoKICAgIGNvbnN0IG5ld0hpc3Rvcnk6IERpYWxvZ1R1cm5bXSA9IFsKICAgICAgLi4uaGlzdG9yeSwKICAgICAgeyByb2xlOiAiYXNzaXN0YW50IiwgdGV4dDogY3VycmVudFF1ZXN0aW9uIH0sCiAgICAgIHsgcm9sZTogInVzZXIiLCB0ZXh0OiB1c2VyUmVwbHkgfSwKICAgIF07CgogICAgc2V0SGlzdG9yeShuZXdIaXN0b3J5KTsKICAgIHNldFVzZXJSZXBseSgiIik7CiAgICBzZXRDdXJyZW50UXVlc3Rpb24oIiIpOwoKICAgIGF3YWl0IGZldGNoTmV4dFF1ZXN0aW9uKG5ld0hpc3RvcnksIHR1cm5OdW1iZXIpOwogIH0KCiAgZnVuY3Rpb24gaGFuZGxlUmVwbHlLZXkoZTogUmVhY3QuS2V5Ym9hcmRFdmVudDxIVE1MVGV4dEFyZWFFbGVtZW50PikgewogICAgaWYgKGUua2V5ID09PSAiRW50ZXIiICYmIChlLm1ldGFLZXkgfHwgZS5jdHJsS2V5KSkgaGFuZGxlU2VuZFJlcGx5KCk7CiAgfQoKICBhc3luYyBmdW5jdGlvbiBzdGFydEFuYWx5c2lzKGhpc3Q6IERpYWxvZ1R1cm5bXSkgewogICAgc2V0UGhhc2UoImFuYWx5emluZyIpOwogICAgc2V0RXJyb3IobnVsbCk7CgogICAgY29uc3QgZGlhbG9nQ29udGV4dCA9IGhpc3QKICAgICAgLm1hcCgodCkgPT4gYCR7dC5yb2xlID09PSAiYXNzaXN0YW50IiA/ICJRIiA6ICJBIn06ICR7dC50ZXh0fWApCiAgICAgIC5qb2luKCJcbiIpOwoKICAgIGNvbnN0IGVucmljaGVkSWRlYSA9IGBPUklHSU5BTCBJRMOJOlxuJHtpZGVhfVxuXG5ESUFMT0ctS09OVEVYVCAoRGlhbG9nLUROQSk6XG4ke2RpYWxvZ0NvbnRleHR9YDsKCiAgICB0cnkgewogICAgICBjb25zdCByZXMgPSBhd2FpdCBmZXRjaCgiL2FwaS9hbmFseXplIiwgewogICAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICAgIGhlYWRlcnM6IHsgIkNvbnRlbnQtVHlwZSI6ICJhcHBsaWNhdGlvbi9qc29uIiB9LAogICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgaWRlYTogZW5yaWNoZWRJZGVhIH0pLAogICAgICB9KTsKCiAgICAgIGlmICghcmVzLm9rKSB7CiAgICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IHJlcy5qc29uKCk7CiAgICAgICAgdGhyb3cgbmV3IEVycm9yKGRhdGEuZXJyb3IgPz8gIk9rw6RudCBmZWwiKTsKICAgICAgfQoKICAgICAgY29uc3QgYmxhbmtldHQgPSBhd2FpdCByZXMuanNvbigpIGFzIEJsYW5rZXR0VHlwZTsKICAgICAgc2V0UmVzdWx0KGJsYW5rZXR0KTsKICAgICAgc2V0UGhhc2UoInJlc3VsdCIpOwogICAgfSBjYXRjaCAoZXJyKSB7CiAgICAgIHNldEVycm9yKGVyciBpbnN0YW5jZW9mIEVycm9yID8gZXJyLm1lc3NhZ2UgOiAiTsOlZ290IGdpY2sgZmVsIik7CiAgICAgIHNldFBoYXNlKCJyZXN1bHQiKTsKICAgIH0KICB9CgogIGZ1bmN0aW9uIGhhbmRsZVJlc2V0KCkgewogICAgc2V0UGhhc2UoImlucHV0Iik7CiAgICBzZXRJZGVhKCIiKTsKICAgIHNldEhpc3RvcnkoW10pOwogICAgc2V0Q3VycmVudFF1ZXN0aW9uKCIiKTsKICAgIHNldFVzZXJSZXBseSgiIik7CiAgICBzZXRUdXJuTnVtYmVyKDApOwogICAgc2V0QXVkaXRUcmlnZ2VyZWQoZmFsc2UpOwogICAgc2V0UmVzdWx0KG51bGwpOwogICAgc2V0RXJyb3IobnVsbCk7CiAgfQoKICByZXR1cm4gKAogICAgPG1haW4gY2xhc3NOYW1lPXtzdHlsZXMubWFpbn0+CiAgICAgIDxoZWFkZXIgY2xhc3NOYW1lPXtzdHlsZXMuaGVhZGVyfT4KICAgICAgICA8c3BhbiBjbGFzc05hbWU9e3N0eWxlcy53b3JkbWFya30+w4ZSIElERUFUSU9OPC9zcGFuPgogICAgICA8L2hlYWRlcj4KCiAgICAgIHtwaGFzZSA9PT0gImlucHV0IiAmJiAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9e3N0eWxlcy5zaW5nbGVQYW5lbH0+CiAgICAgICAgICA8c2VjdGlvbiBjbGFzc05hbWU9e3N0eWxlcy5pbnB1dFBhbmVsfT4KICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT17c3R5bGVzLnBhbmVsTGFiZWx9IGh0bWxGb3I9ImlkZWEtaW5wdXQiPgogICAgICAgICAgICAgIERpbiBpZMOpCiAgICAgICAgICAgIDwvbGFiZWw+CiAgICAgICAgICAgIDx0ZXh0YXJlYQogICAgICAgICAgICAgIGlkPSJpZGVhLWlucHV0IgogICAgICAgICAgICAgIGNsYXNzTmFtZT17c3R5bGVzLnRleHRhcmVhfQogICAgICAgICAgICAgIHBsYWNlaG9sZGVyPSJCZXNrcml2IGRpbiBpZMOpLi4uIgogICAgICAgICAgICAgIHZhbHVlPXtpZGVhfQogICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0SWRlYShlLnRhcmdldC52YWx1ZSl9CiAgICAgICAgICAgICAgb25LZXlEb3duPXtoYW5kbGVJZGVhS2V5fQogICAgICAgICAgICAgIHJvd3M9ezh9CiAgICAgICAgICAgIC8+CiAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICBjbGFzc05hbWU9e3N0eWxlcy5hbmFseXplQnV0dG9ufQogICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVN0YXJ0RGlhbG9nfQogICAgICAgICAgICAgIGRpc2FibGVkPXshaWRlYS50cmltKCl9CiAgICAgICAgICAgID4KICAgICAgICAgICAgICBGb3J0c8OkdHQKICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT17c3R5bGVzLmhpbnR9PuKMmCArIEVudGVyIGbDtnIgYXR0IGZvcnRzw6R0dGE8L3A+CiAgICAgICAgICA8L3NlY3Rpb24+CiAgICAgICAgPC9kaXY+CiAgICAgICl9CgogICAgICB7cGhhc2UgPT09ICJkaWFsb2ciICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT17c3R5bGVzLmRpYWxvZ1BoYXNlfT4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtzdHlsZXMuY2hhdFdpbmRvd30+CiAgICAgICAgICAgIHtoaXN0b3J5Lm1hcCgodHVybiwgaSkgPT4gKAogICAgICAgICAgICAgIDxkaXYKICAgICAgICAgICAgICAgIGtleT17aX0KICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17CiAgICAgICAgICAgICAgICAgIHR1cm4ucm9sZSA9PT0gImFzc2lzdGFudCIKICAgICAgICAgICAgICAgICAgICA/IHN0eWxlcy5jaGF0QnViYmxlQUkKICAgICAgICAgICAgICAgICAgICA6IHN0eWxlcy5jaGF0QnViYmxlVXNlcgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgIHt0dXJuLnRleHR9CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICkpfQoKICAgICAgICAgICAge2N1cnJlbnRRdWVzdGlvbiAmJiAoCiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9e3N0eWxlcy5jaGF0QnViYmxlQUl9PgogICAgICAgICAgICAgICAge2F1ZGl0VHJpZ2dlcmVkICYmICgKICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPXtzdHlsZXMuYXVkaXRCYWRnZX0+SWTDqS1hdWRpdDwvc3Bhbj4KICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICB7Y3VycmVudFF1ZXN0aW9ufQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICApfQoKICAgICAgICAgICAgeyFjdXJyZW50UXVlc3Rpb24gJiYgKAogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtgJHtzdHlsZXMuY2hhdEJ1YmJsZUFJfSAke3N0eWxlcy50aGlua2luZ31gfT4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17c3R5bGVzLmRvdH0gLz4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17c3R5bGVzLmRvdH0gLz4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17c3R5bGVzLmRvdH0gLz4KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgKX0KCiAgICAgICAgICAgIDxkaXYgcmVmPXtjaGF0Qm90dG9tUmVmfSAvPgogICAgICAgICAgPC9kaXY+CgogICAgICAgICAge2N1cnJlbnRRdWVzdGlvbiAmJiAoCiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtzdHlsZXMucmVwbHlSb3d9PgogICAgICAgICAgICAgIDx0ZXh0YXJlYQogICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtzdHlsZXMucmVwbHlUZXh0YXJlYX0KICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPSJEaXR0IHN2YXIuLi4iCiAgICAgICAgICAgICAgICB2YWx1ZT17dXNlclJlcGx5fQogICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRVc2VyUmVwbHkoZS50YXJnZXQudmFsdWUpfQogICAgICAgICAgICAgICAgb25LZXlEb3duPXtoYW5kbGVSZXBseUtleX0KICAgICAgICAgICAgICAgIHJvd3M9ezN9CiAgICAgICAgICAgICAgICBhdXRvRm9jdXMKICAgICAgICAgICAgICAvPgogICAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17c3R5bGVzLnNlbmRCdXR0b259CiAgICAgICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVTZW5kUmVwbHl9CiAgICAgICAgICAgICAgICBkaXNhYmxlZD17IXVzZXJSZXBseS50cmltKCl9CiAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgU2tpY2thCiAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgKX0KCiAgICAgICAgICA8cCBjbGFzc05hbWU9e3N0eWxlcy5oaW50fT7ijJggKyBFbnRlciBmw7ZyIGF0dCBza2lja2E8L3A+CiAgICAgICAgPC9kaXY+CiAgICAgICl9CgogICAgICB7cGhhc2UgPT09ICJhbmFseXppbmciICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT17c3R5bGVzLnNpbmdsZVBhbmVsfT4KICAgICAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT17c3R5bGVzLmlucHV0UGFuZWx9PgogICAgICAgICAgICA8cCBjbGFzc05hbWU9e3N0eWxlcy5wbGFjZWhvbGRlcn0+QW5hbHlzZXJhciBpZMOpbi4uLjwvcD4KICAgICAgICAgIDwvc2VjdGlvbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KCiAgICAgIHtwaGFzZSA9PT0gInJlc3VsdCIgJiYgKAogICAgICAgIDxkaXYgY2xhc3NOYW1lPXtzdHlsZXMuZGlhbG9nfT4KICAgICAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT17c3R5bGVzLmlucHV0UGFuZWx9PgogICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPXtzdHlsZXMucGFuZWxMYWJlbH0+T3JpZ2luYWwgaWTDqTwvbGFiZWw+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT17c3R5bGVzLmlkZWFSZWNhcH0+e2lkZWF9PC9wPgogICAgICAgICAgICA8YnV0dG9uIGNsYXNzTmFtZT17c3R5bGVzLnJlc2V0QnV0dG9ufSBvbkNsaWNrPXtoYW5kbGVSZXNldH0+CiAgICAgICAgICAgICAgTnkgaWTDqQogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgIDwvc2VjdGlvbj4KCiAgICAgICAgICA8c2VjdGlvbiBjbGFzc05hbWU9e3N0eWxlcy5vdXRwdXRQYW5lbH0+CiAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9e3N0eWxlcy5wYW5lbExhYmVsfT5CbGFua2V0dDwvbGFiZWw+CiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtzdHlsZXMub3V0cHV0Q29udGVudH0+CiAgICAgICAgICAgICAge2Vycm9yICYmIDxwIGNsYXNzTmFtZT17c3R5bGVzLmVycm9yVGV4dH0+e2Vycm9yfTwvcD59CiAgICAgICAgICAgICAge3Jlc3VsdCAmJiA8QmxhbmtldHQgZGF0YT17cmVzdWx0fSAvPn0KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L3NlY3Rpb24+CiAgICAgICAgPC9kaXY+CiAgICAgICl9CiAgICA8L21haW4+CiAgKTsKfQo=
+// src/app/page.tsx
+// Ær Ideation — Dialog-DNA flöde.
+// Punkt 94–106: pitch → dialog (3–5 turer, Good Cop) → analys (Bad Cop-kvitto).
+
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { Blankett } from "@/components/Blankett";
+import type { Blankett as BlankettType, DialogTurn, AppPhase } from "@/types/blankett";
+import styles from "./page.module.css";
+
+export default function Home() {
+  const [phase, setPhase] = useState<AppPhase>("input");
+  const [idea, setIdea] = useState("");
+  const [history, setHistory] = useState<DialogTurn[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [userReply, setUserReply] = useState("");
+  const [turnNumber, setTurnNumber] = useState(0);
+  const [auditTriggered, setAuditTriggered] = useState(false);
+  const [result, setResult] = useState<BlankettType | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [history, currentQuestion]);
+
+  async function handleStartDialog() {
+    if (!idea.trim()) return;
+    setPhase("dialog");
+    setError(null);
+    await fetchNextQuestion([], 0);
+  }
+
+  function handleIdeaKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleStartDialog();
+  }
+
+  async function fetchNextQuestion(hist: DialogTurn[], turn: number) {
+    try {
+      const res = await fetch("/api/dialog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea, history: hist, turnNumber: turn }),
+      });
+      if (!res.ok) throw new Error("Dialog-API svarade inte");
+      const data = await res.json() as {
+        question: string;
+        done: boolean;
+        turnNumber: number;
+        auditTriggered: boolean;
+      };
+      setCurrentQuestion(data.question);
+      setTurnNumber(data.turnNumber);
+      setAuditTriggered(data.auditTriggered);
+      if (data.done) {
+        setTimeout(() => startAnalysis(hist), 1200);
+      }
+    } catch {
+      setError("Något gick fel i dialogfasen. Försök igen.");
+    }
+  }
+
+  async function handleSendReply() {
+    if (!userReply.trim() || !currentQuestion) return;
+    const newHistory: DialogTurn[] = [
+      ...history,
+      { role: "assistant", text: currentQuestion },
+      { role: "user", text: userReply },
+    ];
+    setHistory(newHistory);
+    setUserReply("");
+    setCurrentQuestion("");
+    await fetchNextQuestion(newHistory, turnNumber);
+  }
+
+  function handleReplyKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSendReply();
+  }
+
+  async function startAnalysis(hist: DialogTurn[]) {
+    setPhase("analyzing");
+    setError(null);
+    const dialogContext = hist
+      .map((t) => `${t.role === "assistant" ? "Q" : "A"}: ${t.text}`)
+      .join("\n");
+    const enrichedIdea = `ORIGINAL IDÉ:\n${idea}\n\nDIALOG-KONTEXT (Dialog-DNA):\n${dialogContext}`;
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: enrichedIdea }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Okänt fel");
+      }
+      const blankett = await res.json() as BlankettType;
+      setResult(blankett);
+      setPhase("result");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Något gick fel");
+      setPhase("result");
+    }
+  }
+
+  function handleReset() {
+    setPhase("input");
+    setIdea("");
+    setHistory([]);
+    setCurrentQuestion("");
+    setUserReply("");
+    setTurnNumber(0);
+    setAuditTriggered(false);
+    setResult(null);
+    setError(null);
+  }
+
+  return (
+    <main className={styles.main}>
+      <header className={styles.header}>
+        <span className={styles.wordmark}>ÆR IDEATION</span>
+      </header>
+
+      {phase === "input" && (
+        <div className={styles.singlePanel}>
+          <section className={styles.inputPanel}>
+            <label className={styles.panelLabel} htmlFor="idea-input">
+              Din idé
+            </label>
+            <textarea
+              id="idea-input"
+              className={styles.textarea}
+              placeholder="Beskriv din idé..."
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              onKeyDown={handleIdeaKey}
+              rows={8}
+            />
+            <button
+              className={styles.analyzeButton}
+              onClick={handleStartDialog}
+              disabled={!idea.trim()}
+            >
+              Fortsätt
+            </button>
+            <p className={styles.hint}>⌘ + Enter för att fortsätta</p>
+          </section>
+        </div>
+      )}
+
+      {phase === "dialog" && (
+        <div className={styles.dialogPhase}>
+          <div className={styles.chatWindow}>
+            {history.map((turn, i) => (
+              <div
+                key={i}
+                className={
+                  turn.role === "assistant"
+                    ? styles.chatBubbleAI
+                    : styles.chatBubbleUser
+                }
+              >
+                {turn.text}
+              </div>
+            ))}
+            {currentQuestion && (
+              <div className={styles.chatBubbleAI}>
+                {auditTriggered && (
+                  <span className={styles.auditBadge}>Idé-audit</span>
+                )}
+                {currentQuestion}
+              </div>
+            )}
+            {!currentQuestion && (
+              <div className={`${styles.chatBubbleAI} ${styles.thinking}`}>
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+              </div>
+            )}
+            <div ref={chatBottomRef} />
+          </div>
+          {currentQuestion && (
+            <div className={styles.replyRow}>
+              <textarea
+                className={styles.replyTextarea}
+                placeholder="Ditt svar..."
+                value={userReply}
+                onChange={(e) => setUserReply(e.target.value)}
+                onKeyDown={handleReplyKey}
+                rows={3}
+                autoFocus
+              />
+              <button
+                className={styles.sendButton}
+                onClick={handleSendReply}
+                disabled={!userReply.trim()}
+              >
+                Skicka
+              </button>
+            </div>
+          )}
+          <p className={styles.hint}>⌘ + Enter för att skicka</p>
+        </div>
+      )}
+
+      {phase === "analyzing" && (
+        <div className={styles.singlePanel}>
+          <section className={styles.inputPanel}>
+            <p className={styles.placeholder}>Analyserar idén...</p>
+          </section>
+        </div>
+      )}
+
+      {phase === "result" && (
+        <div className={styles.dialog}>
+          <section className={styles.inputPanel}>
+            <label className={styles.panelLabel}>Original idé</label>
+            <p className={styles.ideaRecap}>{idea}</p>
+            <button className={styles.resetButton} onClick={handleReset}>
+              Ny idé
+            </button>
+          </section>
+          <section className={styles.outputPanel}>
+            <label className={styles.panelLabel}>Blankett</label>
+            <div className={styles.outputContent}>
+              {error && <p className={styles.errorText}>{error}</p>}
+              {result && <Blankett data={result} />}
+            </div>
+          </section>
+        </div>
+      )}
+    </main>
+  );
+}
