@@ -1,5 +1,5 @@
 // src/app/api/analyze/route.ts
-// Tar en idébeskrivning → ber Gemini 2.5 Flash fylla den förgyllda blanketten
+// Tar en idébeskrivning → ber Gemini 2.0 Flash fylla den förgyllda blanketten
 // → kör scoring engine → returnerar komplett Blankett.
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,13 +9,14 @@ import type { Blankett } from "@/types/blankett";
 export const runtime = "edge";
 
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const GEMINI_MODEL = "gemini-2.5-flash";
+// gemini-2.0-flash: stabil, tillgänglig på v1beta, stöder system_instruction + responseMimeType
+const GEMINI_MODEL = "gemini-2.0-flash";
 
 const SYSTEM_PROMPT = `Du är Davids idéanalytiker i Ær Ideation. David Stenbeck är en svensk digital konstnär, poet och publicist med 260k följare på Instagram. Hans ekosystem inkluderar: Salami Neon (poesisamling), InvokeAI-produktioner, publicistisk arkitektur (digital layout-motor), och idéer som korsar AI, konst och litteratur.
 
 Din uppgift är att analysera en idé och fylla i den förgyllda blankettens fält. Inga hallucinationer. Inga generiska svar. Inga deckare eller frukostflingor. Idéerna måste vara artefakter i Davids specifika domän.
 
-Returnera EXAKT denna JSON — inget annat:
+Returnera EXAKT denna JSON — inget annat, ingen markdown, inga kodblock:
 {
   "ideaTitle": "...",
   "ideaDescription": "... (2-3 meningar, precis, inget fluff)",
@@ -28,12 +29,12 @@ Returnera EXAKT denna JSON — inget annat:
     "timeline": "..."
   },
   "scoreInput": {
-    "originality": <0-20>,
-    "marketReceptivity": <0-20>,
-    "realisability": <0-20>,
-    "ecosystemSynergy": <0-20>,
-    "aestheticTransformation": <0-20>,
-    "verdict": "... (en auktoritativ mening om idéns bärighet)"
+    "originality": 0,
+    "marketReceptivity": 0,
+    "realisability": 0,
+    "ecosystemSynergy": 0,
+    "aestheticTransformation": 0,
+    "verdict": "..."
   }
 }`;
 
@@ -51,48 +52,101 @@ interface GeminiPayload {
   scoreInput: RawScoreInput;
 }
 
+/** Tar bort eventuella markdown-kodblock som Gemini kan linda JSON i */
+function stripMarkdown(raw: string): string {
+  const trimmed = raw.trim();
+  // ```json ... ``` eller ``` ... ```
+  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return match ? match[1].trim() : trimmed;
+}
+
 export async function POST(req: NextRequest) {
   if (!GEMINI_API_KEY) {
-    return NextResponse.json({ error: "API key missing" }, { status: 500 });
+    return NextResponse.json(
+      { error: "GOOGLE_GENERATIVE_AI_API_KEY saknas i miljövariablerna" },
+      { status: 500 }
+    );
   }
 
-  const body = await req.json();
-  const { idea } = body as { idea: string };
+  let body: { idea?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Ogiltig JSON i request body" }, { status: 400 });
+  }
 
+  const { idea } = body;
   if (!idea || idea.trim().length === 0) {
     return NextResponse.json({ error: "Idé saknas" }, { status: 400 });
   }
 
-  const geminiResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ role: "user", parts: [{ text: idea }] }],
-        generationConfig: {
-          maxOutputTokens: 1024,
-          temperature: 0.7,
-          responseMimeType: "application/json",
-        },
-      }),
-    }
-  );
-
-  if (!geminiResponse.ok) {
-    const err = await geminiResponse.text();
-    return NextResponse.json({ error: `Gemini-fel: ${err}` }, { status: 502 });
+  let geminiResponse: Response;
+  try {
+    geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: "user", parts: [{ text: idea }] }],
+          generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.7,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
+  } catch (fetchErr) {
+    return NextResponse.json(
+      { error: `Nätverksfel mot Gemini: ${String(fetchErr)}` },
+      { status: 502 }
+    );
   }
 
-  const geminiData = await geminiResponse.json();
-  const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+  if (!geminiResponse.ok) {
+    const errText = await geminiResponse.text();
+    return NextResponse.json(
+      { error: `Gemini HTTP ${geminiResponse.status}: ${errText}` },
+      { status: 502 }
+    );
+  }
+
+  let geminiData: unknown;
+  try {
+    geminiData = await geminiResponse.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Gemini returnerade icke-JSON i HTTP-svaret" },
+      { status: 502 }
+    );
+  }
+
+  const rawText: string =
+    (geminiData as { candidates?: { content?: { parts?: { text?: string }[] } }[] })
+      ?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+  if (!rawText) {
+    return NextResponse.json(
+      { error: "Gemini returnerade tomt svar", raw: JSON.stringify(geminiData) },
+      { status: 502 }
+    );
+  }
+
+  const cleaned = stripMarkdown(rawText);
 
   let payload: GeminiPayload;
   try {
-    payload = JSON.parse(rawText);
-  } catch {
-    return NextResponse.json({ error: "Kunde inte tolka Geminis svar" }, { status: 502 });
+    payload = JSON.parse(cleaned) as GeminiPayload;
+  } catch (parseErr) {
+    return NextResponse.json(
+      {
+        error: `Kunde inte tolka Geminis svar: ${String(parseErr)}`,
+        raw: rawText.slice(0, 500),
+      },
+      { status: 502 }
+    );
   }
 
   const score = computeScore(payload.scoreInput);
