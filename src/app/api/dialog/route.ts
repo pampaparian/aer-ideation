@@ -26,7 +26,7 @@ SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, s
 
 AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
 
-Svara endast med vanlig text som en enda fråga eller med avslutsfrasen. Använd inte JSON, markdown eller kodblock.
+Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and do NOT use any structural tags.
 
 Om done är true, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
 
@@ -131,27 +131,7 @@ export async function POST(req: NextRequest) {
   const rawText =
     geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-  let responseText = rawText.trim();
-
-  if (responseText.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(responseText) as { question?: string; done?: boolean };
-      if (typeof parsed.question === "string" && parsed.question.trim()) {
-        responseText = parsed.question.trim();
-      }
-      if (parsed.done) {
-        responseText = DONE_MESSAGE;
-      }
-    } catch {
-      // Fall back to the raw text below.
-    }
-  }
-
-  responseText = finalizeQuestion(responseText || "Kan du berätta mer om idén?", "Kan du berätta mer om idén?");
-
-  if (turnNumber >= 5 && responseText !== DONE_MESSAGE) {
-    responseText = DONE_MESSAGE;
-  }
+  const responseText = finalizeQuestion(rawText || "Kan du berätta mer om idén?", "Kan du berätta mer om idén?");
 
   return plainTextResponse(responseText);
 }
