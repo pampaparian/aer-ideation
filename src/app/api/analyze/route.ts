@@ -3,8 +3,8 @@
 // → kör scoring engine → returnerar komplett Blankett.
 
 import { NextRequest, NextResponse } from "next/server";
-import { computeScore } from "@/lib/scoring";
-import type { Blankett, RawScoreInput } from "@/types/blankett";
+import { computeScore, type RawScoreInput } from "@/lib/scoring";
+import type { Blankett } from "@/types/blankett";
 
 export const runtime = "edge";
 
