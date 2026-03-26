@@ -8,6 +8,7 @@ export const runtime = "edge";
 
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
+const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
 
 const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
 
@@ -25,9 +26,9 @@ SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, s
 
 AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
 
-Returnera exakt JSON utan markdown eller kodblock: {"question":"...","done":false,"turnNumber":1,"auditTriggered":false}
+Svara endast med vanlig text som en enda fråga eller med avslutsfrasen. Använd inte JSON, markdown eller kodblock.
 
-Om done är true, sätt question till: "Bra — jag har nog nu. Analyserar idén."`;
+Om done är true, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
 
 interface DialogMessage {
   role: "user" | "assistant";
@@ -40,17 +41,10 @@ interface RequestBody {
   turnNumber: number;
 }
 
-interface GeminiDialogResponse {
-  question: string;
-  done: boolean;
-  turnNumber: number;
-  auditTriggered: boolean;
-}
-
 function finalizeQuestion(question: string, fallback: string): string {
   const normalized = question.trim().replace(/\s+/g, " ");
   if (!normalized) return fallback;
-  if (normalized === "Bra — jag har nog nu. Analyserar idén.") return normalized;
+  if (normalized === DONE_MESSAGE) return normalized;
   const max = 220;
   const sliced = normalized.length <= max ? normalized : normalized.slice(0, max);
   if (normalized.length <= max) return /[?.!]$/.test(sliced) ? sliced : `${sliced}?`;
@@ -66,26 +60,33 @@ function finalizeQuestion(question: string, fallback: string): string {
   return /[?.!]$/.test(safe) ? safe : `${safe}?`;
 }
 
+function plainTextResponse(text: string, status = 200) {
+  return new NextResponse(text, {
+    status,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, route: "/api/dialog" });
 }
 
 export async function POST(req: NextRequest) {
   if (!GEMINI_API_KEY) {
-    return NextResponse.json({ error: "GOOGLE_GENERATIVE_AI_API_KEY saknas" }, { status: 500 });
+    return plainTextResponse("GOOGLE_GENERATIVE_AI_API_KEY saknas", 500);
   }
 
   let body: RequestBody;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Ogiltig JSON" }, { status: 400 });
+    return plainTextResponse("Ogiltig JSON", 400);
   }
 
   const { idea, history = [], turnNumber = 0 } = body;
 
   if (!idea?.trim()) {
-    return NextResponse.json({ error: "Ide saknas" }, { status: 400 });
+    return plainTextResponse("Ide saknas", 400);
   }
 
   const historyContents = history.map((m) => ({
@@ -98,10 +99,7 @@ export async function POST(req: NextRequest) {
       ? `Ide: ${idea}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
       : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa historiken ovan.`;
 
-  const contents = [
-    ...historyContents,
-    { role: "user", parts: [{ text: userMessage }] },
-  ];
+  const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
 
   let geminiResp: Response;
   try {
@@ -113,47 +111,47 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.4, maxOutputTokens: 512 },
+          generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
         }),
       }
     );
   } catch (fetchErr) {
-    return NextResponse.json({ error: `Natverksfel: ${String(fetchErr)}` }, { status: 502 });
+    return plainTextResponse(`Natverksfel: ${String(fetchErr)}`, 502);
   }
 
   if (!geminiResp.ok) {
     const errText = await geminiResp.text();
-    return NextResponse.json({ error: `Gemini HTTP ${geminiResp.status}: ${errText}` }, { status: 502 });
+    return plainTextResponse(`Gemini HTTP ${geminiResp.status}: ${errText}`, 502);
   }
 
-  const geminiData = await geminiResp.json() as {
+  const geminiData = (await geminiResp.json()) as {
     candidates?: { content?: { parts?: { text?: string }[] } }[];
   };
 
-  const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const rawText =
+    geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-  const start = rawText.indexOf("{");
-  const end = rawText.lastIndexOf("}");
-  const jsonStr = start !== -1 && end > start ? rawText.slice(start, end + 1) : rawText;
+  let responseText = rawText.trim();
 
-  let parsed: GeminiDialogResponse;
-  try {
-    parsed = JSON.parse(jsonStr) as GeminiDialogResponse;
-  } catch {
-    parsed = {
-      question: rawText.trim() || "Kan du berätta mer om idén?",
-      done: false,
-      turnNumber: turnNumber + 1,
-      auditTriggered: false,
-    };
+  if (responseText.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(responseText) as { question?: string; done?: boolean };
+      if (typeof parsed.question === "string" && parsed.question.trim()) {
+        responseText = parsed.question.trim();
+      }
+      if (parsed.done) {
+        responseText = DONE_MESSAGE;
+      }
+    } catch {
+      // Fall back to the raw text below.
+    }
   }
 
-  parsed.question = finalizeQuestion(parsed.question, "Kan du berätta mer om idén?");
+  responseText = finalizeQuestion(responseText || "Kan du berätta mer om idén?", "Kan du berätta mer om idén?");
 
-  if (parsed.turnNumber >= 5 && !parsed.done) {
-    parsed.done = true;
-    parsed.question = "Bra — jag har nog nu. Analyserar idén.";
+  if (turnNumber >= 5 && responseText !== DONE_MESSAGE) {
+    responseText = DONE_MESSAGE;
   }
 
-  return NextResponse.json(parsed);
+  return plainTextResponse(responseText);
 }
