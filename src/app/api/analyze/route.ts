@@ -1,5 +1,5 @@
 // src/app/api/analyze/route.ts
-// Tar en idébeskrivning → ber Gemini 2.0 Flash fylla den förgyllda blanketten
+// Tar en idébeskrivning → ber Gemini 2.5 Flash fylla den förgyllda blanketten
 // → kör scoring engine → returnerar komplett Blankett.
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,8 +9,8 @@ import type { Blankett } from "@/types/blankett";
 export const runtime = "edge";
 
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-// gemini-2.0-flash: stabil, tillgänglig på v1beta, stöder system_instruction + responseMimeType
-const GEMINI_MODEL = "gemini-2.0-flash";
+// gemini-2.5-flash: stabil alias på v1beta, stöder system_instruction + responseMimeType (JSON-mode)
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 const SYSTEM_PROMPT = `Du är Davids idéanalytiker i Ær Ideation. David Stenbeck är en svensk digital konstnär, poet och publicist med 260k följare på Instagram. Hans ekosystem inkluderar: Salami Neon (poesisamling), InvokeAI-produktioner, publicistisk arkitektur (digital layout-motor), och idéer som korsar AI, konst och litteratur.
 
