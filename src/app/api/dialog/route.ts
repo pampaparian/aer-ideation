@@ -10,7 +10,7 @@ const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
 const MAX_HISTORY_MESSAGES = 4;
-const MAX_MESSAGE_CHARS = 300;
+const MAX_MESSAGE_CHARS = 260;
 const GEMINI_TIMEOUT_MS = 12000;
 
 const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
@@ -18,6 +18,12 @@ const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som 
 PERSONA: Good Cop. Vänlig, nyfiken, organisk.
 
 UPPDRAG: Ställ 3–5 korta, klustrade frågor. Håll varje fråga under 220 tecken om möjligt. Extrahera signal snabbt och avsluta när informationsmättnad är nådd.
+
+VIKTIGT:
+- Ställ exakt en ny fråga per tur.
+- Återanvänd inte formuleringar från idén eller tidigare svar.
+- Citatera inte användarens text.
+- Svara endast med ren fråga eller avslutsfras.
 
 STRUKTUR:
 - Tur 1–2: lite längre, men fortfarande tighta.
@@ -29,7 +35,7 @@ SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, s
 
 AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
 
-Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and Do NOT use any structural tags.
+Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and do NOT use any structural tags.
 
 Om done är true, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
 
@@ -44,8 +50,40 @@ interface RequestBody {
   turnNumber: number;
 }
 
+function normalizeText(text: string): string {
+  return text.trim().replace(/\s+/g, " ");
+}
+
+function dedupeRepeatedPhrases(text: string): string {
+  const normalized = normalizeText(text);
+  const marker = " eller annorlunda: ";
+  const idx = normalized.toLowerCase().indexOf(marker);
+  if (idx !== -1) {
+    return normalizeText(normalized.slice(0, idx));
+  }
+
+  const parts = normalized.split(/\s{2,}|[|]/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2 && parts[0] === parts[1]) {
+    return parts[0];
+  }
+
+  const sentenceParts = normalized.split(/(?<=[?.!])\s+/);
+  if (sentenceParts.length >= 2) {
+    const unique: string[] = [];
+    for (const sentence of sentenceParts) {
+      const trimmed = sentence.trim();
+      if (!trimmed) continue;
+      if (unique.includes(trimmed)) continue;
+      unique.push(trimmed);
+    }
+    return unique.join(" ");
+  }
+
+  return normalized;
+}
+
 function finalizeQuestion(question: string, fallback: string): string {
-  const normalized = question.trim().replace(/\s+/g, " ");
+  const normalized = dedupeRepeatedPhrases(question);
   if (!normalized) return fallback;
   if (normalized === DONE_MESSAGE) return normalized;
   const max = 220;
@@ -71,44 +109,35 @@ function plainTextResponse(text: string, status = 200) {
 }
 
 function truncateText(text: string, limit = MAX_MESSAGE_CHARS) {
-  const normalized = text.trim().replace(/\s+/g, " ");
+  const normalized = normalizeText(text);
   if (normalized.length <= limit) return normalized;
   return `${normalized.slice(0, limit - 1)}…`;
 }
 
 function buildHistoryContents(history: DialogMessage[]) {
-  return history.slice(-MAX_HISTORY_MESSAGES).map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: truncateText(m.text) }],
-  }));
+  return history
+    .filter((m) => m.role === "user")
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((m) => ({
+      role: "user",
+      parts: [{ text: truncateText(m.text) }],
+    }));
 }
 
-function fallbackQuestion(turnNumber: number, idea: string, history: DialogMessage[]) {
-  const lastAssistantQuestion = [...history].reverse().find((m) => m.role === "assistant")?.text?.trim();
-
-  const fallbacks = [
-    `Vad är den viktigaste kärnan i idén, om du bara får säga en mening?`,
-    `Vem är det här mest för, och vilket problem vill du lösa för dem?`,
-    `Vad har du redan sett för signaler att det här kan fungera?`,
-    `Vad är den största risk eller flaskhals du ser just nu?`,
-    `Om vi testar detta i 12 månader, hur märker vi om det blev rätt?`,
+function fallbackQuestion(turnNumber: number) {
+  const questions = [
+    "Vad är den viktigaste kärnan i idén?",
+    "Vem är detta mest för?",
+    "Vilket problem vill du lösa först?",
+    "Vad är den största risk du ser just nu?",
+    "Hur skulle du märka om detta fungerar om 12 månader?",
   ];
 
-  const byTurn = fallbacks[Math.min(turnNumber, fallbacks.length - 1)];
-  const ideaLead = idea.trim().split(/\s+/).slice(0, 10).join(" ");
+  return questions[Math.min(turnNumber, questions.length - 1)];
+}
 
-  if (lastAssistantQuestion && lastAssistantQuestion !== DONE_MESSAGE) {
-    return finalizeQuestion(
-      `${byTurn} Eller annorlunda: ${lastAssistantQuestion}`,
-      byTurn
-    );
-  }
-
-  if (ideaLead) {
-    return finalizeQuestion(`${byTurn} Gärna med fokus på: ${ideaLead}`, byTurn);
-  }
-
-  return finalizeQuestion(byTurn, byTurn);
+function safeFallback(turnNumber: number) {
+  return fallbackQuestion(turnNumber);
 }
 
 export async function GET() {
@@ -129,16 +158,18 @@ export async function POST(req: NextRequest) {
     return plainTextResponse("Ide saknas", 400);
   }
 
+  const fallback = safeFallback(turnNumber);
+
   if (!GEMINI_API_KEY) {
-    return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
+    return plainTextResponse(fallback, 200);
   }
 
   const historyContents = buildHistoryContents(history);
 
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${truncateText(idea, 1000)}\n\nTurnNumber: 1. Stall din forsta klustrade fraga.`
-      : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa historiken ovan.`;
+      ? `Ide: ${truncateText(idea, 900)}\n\nTurnNumber: 1. Stall en ny, kort klustrad fraga.`
+      : `TurnNumber: ${turnNumber + 1}. Fortsatt dialogen baserat pa tidigare user-svar.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
 
@@ -155,13 +186,13 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.35, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.25, maxOutputTokens: 1024 },
         }),
       }
     );
 
     if (!geminiResp.ok) {
-      return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
+      return plainTextResponse(fallback, 200);
     }
 
     const geminiData = (await geminiResp.json()) as {
@@ -171,13 +202,10 @@ export async function POST(req: NextRequest) {
     const rawText =
       geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-    const responseText = finalizeQuestion(
-      rawText || fallbackQuestion(turnNumber, idea, history),
-      fallbackQuestion(turnNumber, idea, history)
-    );
+    const responseText = finalizeQuestion(rawText || fallback, fallback);
     return plainTextResponse(responseText);
   } catch {
-    return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
+    return plainTextResponse(fallback, 200);
   } finally {
     clearTimeout(timeout);
   }
