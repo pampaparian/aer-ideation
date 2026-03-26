@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ær Ideation",
   description: "Bärighetsanalys för Davids idéer",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
