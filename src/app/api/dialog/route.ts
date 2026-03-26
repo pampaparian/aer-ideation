@@ -66,6 +66,10 @@ function finalizeQuestion(question: string, fallback: string): string {
   return /[?.!]$/.test(safe) ? safe : `${safe}?`;
 }
 
+export async function GET() {
+  return NextResponse.json({ ok: true, route: /api/dialog });
+}
+
 export async function POST(req: NextRequest) {
   if (!GEMINI_API_KEY) {
     return NextResponse.json({ error: "GOOGLE_GENERATIVE_AI_API_KEY saknas" }, { status: 500 });
