@@ -2,7 +2,7 @@
 // Den förgyllda blanketten — standardiserat kvitto/leverans UI.
 // Strukturen är fast; AI fyller enbart de dynamiska fälten.
 
-import type { Blankett as BlankettType } from "@/types/blankett";
+import type { Blankett as BlankettType, ScoreDimension } from "@/types/blankett";
 import styles from "./Blankett.module.css";
 
 interface Props {
@@ -92,10 +92,15 @@ export function Blankett({ data }: Props) {
             ["Realiserbarhet", score.breakdown.realisability],
             ["Ekosystemsynergi", score.breakdown.ecosystemSynergy],
             ["Estetisk transformation", score.breakdown.aestheticTransformation],
-          ] as [string, number][]).map(([label, val]) => (
+          ] as [string, ScoreDimension][]).map(([label, dim]) => (
             <div className={styles.breakdownRow} key={label}>
-              <span className={styles.breakdownLabel}>{label}</span>
-              <span className={styles.breakdownScore}>{val}/20</span>
+              <div className={styles.breakdownMeta}>
+                <span className={styles.breakdownLabel}>{label}</span>
+                <span className={styles.breakdownScore}>{dim.score}/20</span>
+              </div>
+              {dim.rationale && (
+                <p className={styles.breakdownRationale}>{dim.rationale}</p>
+              )}
             </div>
           ))}
         </div>
