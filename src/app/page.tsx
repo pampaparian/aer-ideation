@@ -20,11 +20,22 @@ export default function Home() {
   const [turnNumber, setTurnNumber] = useState(0);
   const [result, setResult] = useState<BlankettType | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isWaitingForQuestion, setIsWaitingForQuestion] = useState(false);
+  const [isSlowQuestion, setIsSlowQuestion] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history, currentQuestion]);
+  }, [history, currentQuestion, isWaitingForQuestion, isSlowQuestion]);
+
+  useEffect(() => {
+    if (!isWaitingForQuestion) {
+      setIsSlowQuestion(false);
+      return;
+    }
+    const timer = setTimeout(() => setIsSlowQuestion(true), 2500);
+    return () => clearTimeout(timer);
+  }, [isWaitingForQuestion]);
 
   async function handleStartDialog() {
     if (!idea.trim()) return;
@@ -38,6 +49,7 @@ export default function Home() {
   }
 
   async function fetchNextQuestion(hist: DialogTurn[], turn: number) {
+    setIsWaitingForQuestion(true);
     try {
       const res = await fetch("/api/dialog", {
         method: "POST",
@@ -54,6 +66,8 @@ export default function Home() {
       }
     } catch {
       setError("Något gick fel i dialogfasen. Försök igen.");
+    } finally {
+      setIsWaitingForQuestion(false);
     }
   }
 
@@ -109,6 +123,8 @@ export default function Home() {
     setTurnNumber(0);
     setResult(null);
     setError(null);
+    setIsWaitingForQuestion(false);
+    setIsSlowQuestion(false);
   }
 
   return (
@@ -135,7 +151,7 @@ export default function Home() {
             <button
               className={styles.analyzeButton}
               onClick={handleStartDialog}
-              disabled={!idea.trim()}
+              disabled={!idea.trim() || isWaitingForQuestion}
             >
               Fortsätt
             </button>
@@ -159,16 +175,21 @@ export default function Home() {
                 {turn.text}
               </div>
             ))}
+            {isWaitingForQuestion && !currentQuestion && (
+              <div className={`${styles.chatBubbleAI} ${styles.thinking}`}>
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+                <span className={styles.dot} />
+              </div>
+            )}
             {currentQuestion && (
               <div className={styles.chatBubbleAI}>
                 {currentQuestion}
               </div>
             )}
-            {!currentQuestion && (
-              <div className={`${styles.chatBubbleAI} ${styles.thinking}`}>
-                <span className={styles.dot} />
-                <span className={styles.dot} />
-                <span className={styles.dot} />
+            {isSlowQuestion && isWaitingForQuestion && (
+              <div className={styles.chatBubbleAI}>
+                Tänker lite längre än vanligt — jag använder en snabb stödföljdfråga om det behövs.
               </div>
             )}
             <div ref={chatBottomRef} />
@@ -187,7 +208,7 @@ export default function Home() {
               <button
                 className={styles.sendButton}
                 onClick={handleSendReply}
-                disabled={!userReply.trim()}
+                disabled={!userReply.trim() || isWaitingForQuestion}
               >
                 Skicka
               </button>
