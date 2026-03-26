@@ -67,7 +67,7 @@ function finalizeQuestion(question: string, fallback: string): string {
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, route: /api/dialog });
+  return NextResponse.json({ ok: true, route: "/api/dialog" });
 }
 
 export async function POST(req: NextRequest) {
