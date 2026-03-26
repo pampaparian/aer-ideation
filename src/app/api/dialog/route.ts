@@ -12,7 +12,6 @@ const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
 const MAX_HISTORY_MESSAGES = 4;
 const MAX_MESSAGE_CHARS = 300;
 const GEMINI_TIMEOUT_MS = 12000;
-const FALLBACK_QUESTION = "Kan du utveckla det lite mer?";
 
 const SYSTEM_PROMPT = `Du ar Dialog-DNA i Aer Ideation — ett samtalslager som samlar precis nog kontext innan analysen.
 
@@ -30,7 +29,7 @@ SANITY CHECK: Om svaret saknar substans eller planen är extrem utan struktur, s
 
 AVSLUTNING: När tillräcklig signal är samlad, sätt done: true. Gör detta senast vid tur 5.
 
-Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and do NOT use any structural tags.
+Output ONLY the text for the next question. Do NOT use JSON, do NOT use code blocks, and Do NOT use any structural tags.
 
 Om done är true, svara exakt: "Bra — jag har nog nu. Analyserar idén."`;
 
@@ -84,15 +83,39 @@ function buildHistoryContents(history: DialogMessage[]) {
   }));
 }
 
+function fallbackQuestion(turnNumber: number, idea: string, history: DialogMessage[]) {
+  const lastAssistantQuestion = [...history].reverse().find((m) => m.role === "assistant")?.text?.trim();
+
+  const fallbacks = [
+    `Vad är den viktigaste kärnan i idén, om du bara får säga en mening?`,
+    `Vem är det här mest för, och vilket problem vill du lösa för dem?`,
+    `Vad har du redan sett för signaler att det här kan fungera?`,
+    `Vad är den största risk eller flaskhals du ser just nu?`,
+    `Om vi testar detta i 12 månader, hur märker vi om det blev rätt?`,
+  ];
+
+  const byTurn = fallbacks[Math.min(turnNumber, fallbacks.length - 1)];
+  const ideaLead = idea.trim().split(/\s+/).slice(0, 10).join(" ");
+
+  if (lastAssistantQuestion && lastAssistantQuestion !== DONE_MESSAGE) {
+    return finalizeQuestion(
+      `${byTurn} Eller annorlunda: ${lastAssistantQuestion}`,
+      byTurn
+    );
+  }
+
+  if (ideaLead) {
+    return finalizeQuestion(`${byTurn} Gärna med fokus på: ${ideaLead}`, byTurn);
+  }
+
+  return finalizeQuestion(byTurn, byTurn);
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, route: "/api/dialog", runtime });
 }
 
 export async function POST(req: NextRequest) {
-  if (!GEMINI_API_KEY) {
-    return plainTextResponse(FALLBACK_QUESTION, 200);
-  }
-
   let body: RequestBody;
   try {
     body = await req.json();
@@ -104,6 +127,10 @@ export async function POST(req: NextRequest) {
 
   if (!idea?.trim()) {
     return plainTextResponse("Ide saknas", 400);
+  }
+
+  if (!GEMINI_API_KEY) {
+    return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
   }
 
   const historyContents = buildHistoryContents(history);
@@ -128,13 +155,13 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.35, maxOutputTokens: 1024 },
         }),
       }
     );
 
     if (!geminiResp.ok) {
-      return plainTextResponse(FALLBACK_QUESTION, 200);
+      return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
     }
 
     const geminiData = (await geminiResp.json()) as {
@@ -144,10 +171,13 @@ export async function POST(req: NextRequest) {
     const rawText =
       geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-    const responseText = finalizeQuestion(rawText || FALLBACK_QUESTION, FALLBACK_QUESTION);
+    const responseText = finalizeQuestion(
+      rawText || fallbackQuestion(turnNumber, idea, history),
+      fallbackQuestion(turnNumber, idea, history)
+    );
     return plainTextResponse(responseText);
   } catch {
-    return plainTextResponse(FALLBACK_QUESTION, 200);
+    return plainTextResponse(fallbackQuestion(turnNumber, idea, history), 200);
   } finally {
     clearTimeout(timeout);
   }
