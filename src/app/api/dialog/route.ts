@@ -18,23 +18,23 @@ const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
 const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
 Persona:
-- Intellektuell, skarp och lite fientligt nyfiken.
-- Inte varm-pratig; mer precis, krävande och analytisk.
-- Känn dig fri att vara rak, men aldrig otrevlig.
+- Intellektuell, skarp och analytisk.
+- Krävande i sak, aldrig hostil.
+- Tänk som en kritiker som vill testa om idén faktiskt håller.
 
 Syfte:
 - Ställ exakt en fråga i taget.
-- Frågan ska alltid driva samtalet djupare än användarens senaste formulering.
-- Gå efter mekanik, struktur, drivkrafter, incitament, flaskhalsar, risker, beteende och varför idén faktiskt skulle fungera eller falla.
+- Frågan ska alltid gå djupare än användarens senaste formulering.
+- Gå efter mekanik, struktur, drivkrafter, incitament, flaskhalsar, risker, beteende och vad som måste vara sant för att idén ska fungera.
 - Undvik abstrakta omformuleringar av användarens ord.
 - Parafrasera inte, spegla inte, och återanvänd inte nyckelord från idén eller senaste svaret om det går att undvika.
 
 Stilregler:
 - Variera meningslängd och satsrytm.
-- Undvik generiska mallfrågor som börjar med "Hur upplever...", "Vad får...", "På vilket sätt..." om de inte är specifikt motiverade av kontexten.
+- Undvik generiska mallfrågor som börjar med "Hur upplever...", "Vad får...", "På vilket sätt..." om de inte är tydligt motiverade av kontexten.
 - Frågan ska kännas som att den försöker spräcka en illusion, inte bekräfta den.
-- Föredra konkreta frågor om exekvering, krockar, beroenden, målgruppens faktiska beteende och vad som måste vara sant för att idén ska hålla.
-- Om idén är vag, gå på definitioner, gränser och antaganden. Om den är ambitiös, gå på resurser, distribution, tid och misslyckandepunkter.
+- Föredra konkreta frågor om exekvering, krockar, beroenden, målgruppens faktiska beteende och misslyckandepunkter.
+- Om idén är vag, gå på definitioner, gränser och antaganden. Om den är ambitiös, gå på resurser, distribution, tid och reala hinder.
 
 Format:
 - Svara bara med frågetext eller avslutsfras.
@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
   const historyContents = buildHistoryContents(history);
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${truncateText(idea, 700)}\nStäll en kort, varm följdfråga.`
-      : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny, kort fråga utifrån senaste svaret.`;
+      ? `Ide: ${truncateText(idea, 700)}\nStäll en kort, skarp följdfråga.`
+      : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny fråga utifrån senaste svaret.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
 
@@ -141,37 +141,53 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 256 },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
         }),
       }
     );
 
     if (!geminiResp.ok) {
-      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
+      const errText = await geminiResp.text();
+      console.error("Dialog Gemini HTTP error", {
+        status: geminiResp.status,
+        errText,
+      });
+      return plainTextResponse(`Gemini HTTP ${geminiResp.status}: ${errText}`, 502);
     }
 
     const geminiData = (await geminiResp.json()) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
+      promptFeedback?: { blockReason?: string };
     };
 
     const rawText =
       geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
     if (!rawText.trim()) {
-      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
+      const blockReason = geminiData?.promptFeedback?.blockReason;
+      console.error("Dialog Gemini empty response", {
+        blockReason,
+        promptFeedback: geminiData?.promptFeedback,
+      });
+      return plainTextResponse(
+        blockReason ? `Gemini tomt svar: ${blockReason}` : "Gemini tomt svar",
+        502
+      );
     }
 
     const responseText = finalizeQuestion(rawText);
     if (!responseText) {
-      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
+      console.error("Dialog Gemini parse/cleanup produced empty question", { rawText });
+      return plainTextResponse("Gemini tomt svar", 502);
     }
 
     return plainTextResponse(responseText);
-  } catch {
+  } catch (err) {
     if (controller.signal.aborted) {
       return plainTextResponse(GEMINI_TIMEOUT_ERROR, 504);
     }
 
+    console.error("Dialog Gemini fetch failed", { err: String(err) });
     return plainTextResponse(GEMINI_LOOP_ERROR, 500);
   } finally {
     clearTimeout(timeout);
