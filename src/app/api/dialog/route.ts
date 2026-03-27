@@ -83,7 +83,7 @@ function trimToWordBoundary(text: string, limit: number): string {
 }
 
 function stripTrailingClippingMarks(text: string): string {
-  return text.replace(/[\s,;:\-—]+$/u, "").trim();
+  return text.replace(/[\s,;:\-—]+$/, "").trim();
 }
 
 function finalizeQuestion(question: string): string {
