@@ -11,7 +11,7 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
 const MAX_HISTORY_MESSAGES = 2;
 const MAX_MESSAGE_CHARS = 180;
-const GEMINI_TIMEOUT_MS = 12000;
+const GEMINI_TIMEOUT_MS = 10000;
 const GEMINI_LOOP_ERROR = "Fel i Gemini-loopen";
 const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
 
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.1, maxOutputTokens: 256 },
         }),
       }
     );
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     }
 
     return plainTextResponse(responseText);
-  } catch (error) {
+  } catch {
     if (controller.signal.aborted) {
       return plainTextResponse(GEMINI_TIMEOUT_ERROR, 504);
     }
