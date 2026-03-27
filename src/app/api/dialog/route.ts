@@ -8,13 +8,9 @@ export const runtime = "edge";
 
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
-const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
-const MAX_CONTEXT_MESSAGES = 8;
-const MAX_CONTEXT_MESSAGE_CHARS = 320;
 const GEMINI_TIMEOUT_MS = 10000;
 const GEMINI_LOOP_ERROR = "Fel i Gemini-loopen";
 const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
-const MAX_FINAL_QUESTION_CHARS = 1200;
 
 const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
@@ -34,8 +30,9 @@ Rotationsregel:
 - Om ett hinder, en risk eller en säkerhetsfråga redan har fått ett svar, lämna den axeln.
 - Stanna inte i samma tema flera turer i rad.
 - Aldrig tre frågor i rad som betyder samma sak som "Vad förhindrar..." eller "Vad hindrar...".
-- När ett sådant spår är besvarat, byt omedelbart till en annan dimension av idén: ritual, estetik, litterärt värde, användarupplevelse, distribution, social energi, format, eller ekonomi.
-- Om dialogen nyss har kretsat kring security/copying, fortsätt inte att pressa just det spåret; gå vidare till hur idén känns, används, ser ut, cirkulerar eller blir minnesvärd.
+- Do NOT ask about the scanning ritual or motivation again. It is already discussed.
+- Move to: Physicality, Distribution, Literary Value, Risk, Failure Modes.
+- Om dialogen nyss har kretsat kring security/copying eller scanning, fortsätt inte att pressa just det spåret; gå vidare till hur idén känns, används, ser ut, cirkulerar eller blir minnesvärd.
 
 Stilregler:
 - Variera meningslängd och satsrytm.
@@ -63,44 +60,6 @@ interface RequestBody {
   turnNumber: number;
 }
 
-function normalizeText(text: string): string {
-  return text.trim().replace(/\s+/g, " ");
-}
-
-function stripEchoes(text: string): string {
-  const normalized = normalizeText(text);
-  const doubled = normalized.match(/^(.*?)(?:\s+\1)+$/i);
-  if (doubled?.[1]) return doubled[1].trim();
-  return normalized;
-}
-
-function trimToWordBoundary(text: string, limit: number): string {
-  if (text.length <= limit) return text;
-  const sliced = text.slice(0, limit);
-  const lastSpace = sliced.lastIndexOf(" ");
-  if (lastSpace <= 0) return sliced.trim();
-  return sliced.slice(0, lastSpace).trim();
-}
-
-function stripTrailingClippingMarks(text: string): string {
-  return text.replace(/[\s,;:\-—]+$/, "").trim();
-}
-
-function finalizeQuestion(question: string): string {
-  const normalized = stripEchoes(question);
-  if (!normalized) return "";
-  if (normalized === DONE_MESSAGE) return normalized;
-
-  const wasClipped = normalized.length > MAX_FINAL_QUESTION_CHARS;
-  const safeText = trimToWordBoundary(normalized, MAX_FINAL_QUESTION_CHARS);
-  const cleaned = stripTrailingClippingMarks(safeText);
-  if (!cleaned) return "";
-
-  if (/[?.!]$/.test(cleaned)) return cleaned;
-  if (wasClipped) return cleaned;
-  return `${cleaned}?`;
-}
-
 function plainTextResponse(text: string, status = 200) {
   return new NextResponse(text, {
     status,
@@ -108,16 +67,10 @@ function plainTextResponse(text: string, status = 200) {
   });
 }
 
-function truncateText(text: string, limit = MAX_CONTEXT_MESSAGE_CHARS) {
-  const normalized = normalizeText(text);
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}…`;
-}
-
 function buildHistoryContents(history: DialogMessage[]) {
-  return history.slice(-MAX_CONTEXT_MESSAGES).map((m) => ({
+  return history.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: truncateText(m.text) }],
+    parts: [{ text: m.text }],
   }));
 }
 
@@ -135,7 +88,7 @@ export async function POST(req: NextRequest) {
 
   const { idea, history = [], turnNumber = 0 } = body;
 
-  if (!idea?.trim()) {
+  if (!idea) {
     return plainTextResponse("Ide saknas", 400);
   }
 
@@ -146,7 +99,7 @@ export async function POST(req: NextRequest) {
   const historyContents = buildHistoryContents(history);
   const userMessage =
     turnNumber === 0
-      ? `Ide: ${truncateText(idea, 700)}\nStäll en kort, skarp följdfråga.`
+      ? `Ide: ${idea}\nStäll en kort, skarp följdfråga.`
       : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny fråga utifrån senaste svaret, men byt axel om ett spår redan är mättat.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
@@ -186,7 +139,7 @@ export async function POST(req: NextRequest) {
     const rawText =
       geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-    if (!rawText.trim()) {
+    if (rawText === "") {
       const blockReason = geminiData?.promptFeedback?.blockReason;
       console.error("Dialog Gemini empty response", {
         blockReason,
@@ -198,13 +151,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const responseText = finalizeQuestion(rawText);
-    if (!responseText) {
-      console.error("Dialog Gemini parse/cleanup produced empty question", { rawText });
-      return plainTextResponse("Gemini tomt svar", 502);
-    }
-
-    return plainTextResponse(responseText);
+    return plainTextResponse(rawText);
   } catch (err) {
     if (controller.signal.aborted) {
       return plainTextResponse(GEMINI_TIMEOUT_ERROR, 504);
