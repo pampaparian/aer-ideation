@@ -12,6 +12,8 @@ const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
 const MAX_HISTORY_MESSAGES = 2;
 const MAX_MESSAGE_CHARS = 180;
 const GEMINI_TIMEOUT_MS = 12000;
+const GEMINI_LOOP_ERROR = "Fel i Gemini-loopen";
+const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
 
 const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
@@ -43,22 +45,14 @@ function normalizeText(text: string): string {
 
 function stripEchoes(text: string): string {
   const normalized = normalizeText(text);
-  const markers = [" eller annorlunda:", " - eller annorlunda:", "\n"]; 
-  let result = normalized;
-  for (const marker of markers) {
-    const idx = result.toLowerCase().indexOf(marker.trim().toLowerCase());
-    if (idx > 0 && marker.includes("annorlunda")) {
-      result = result.slice(0, idx).trim();
-    }
-  }
-  const doubled = result.match(/^(.*?)(?:\s+\1)+$/i);
+  const doubled = normalized.match(/^(.*?)(?:\s+\1)+$/i);
   if (doubled?.[1]) return doubled[1].trim();
-  return result;
+  return normalized;
 }
 
-function finalizeQuestion(question: string, fallback: string): string {
+function finalizeQuestion(question: string): string {
   const normalized = stripEchoes(question);
-  if (!normalized) return fallback;
+  if (!normalized) return "";
   if (normalized === DONE_MESSAGE) return normalized;
   const max = 220;
   const sliced = normalized.length <= max ? normalized : normalized.slice(0, max);
@@ -89,18 +83,6 @@ function buildHistoryContents(history: DialogMessage[]) {
     }));
 }
 
-function fallbackQuestion(turnNumber: number) {
-  const questions = [
-    "Vad i idén känns mest levande just nu?",
-    "Vad skulle du vilja förstå lite bättre först?",
-    "Om du följer den känslan ett steg till, vart leder den?",
-    "Vad tror du kommer överraska dig mest här?",
-    "Om vi zoomar ut ett år, vad hoppas du att det har blivit då?",
-  ];
-
-  return questions[Math.min(turnNumber, questions.length - 1)];
-}
-
 export async function GET() {
   return NextResponse.json({ ok: true, route: "/api/dialog", runtime });
 }
@@ -119,10 +101,8 @@ export async function POST(req: NextRequest) {
     return plainTextResponse("Ide saknas", 400);
   }
 
-  const fallback = fallbackQuestion(turnNumber);
-
   if (!GEMINI_API_KEY) {
-    return plainTextResponse(fallback, 200);
+    return plainTextResponse(GEMINI_LOOP_ERROR, 500);
   }
 
   const historyContents = buildHistoryContents(history);
@@ -152,7 +132,7 @@ export async function POST(req: NextRequest) {
     );
 
     if (!geminiResp.ok) {
-      return plainTextResponse(fallback, 200);
+      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
     }
 
     const geminiData = (await geminiResp.json()) as {
@@ -162,10 +142,22 @@ export async function POST(req: NextRequest) {
     const rawText =
       geminiData?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
 
-    const responseText = finalizeQuestion(rawText || fallback, fallback);
+    if (!rawText.trim()) {
+      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
+    }
+
+    const responseText = finalizeQuestion(rawText);
+    if (!responseText) {
+      return plainTextResponse(GEMINI_LOOP_ERROR, 502);
+    }
+
     return plainTextResponse(responseText);
-  } catch {
-    return plainTextResponse(fallback, 200);
+  } catch (error) {
+    if (controller.signal.aborted) {
+      return plainTextResponse(GEMINI_TIMEOUT_ERROR, 504);
+    }
+
+    return plainTextResponse(GEMINI_LOOP_ERROR, 500);
   } finally {
     clearTimeout(timeout);
   }
