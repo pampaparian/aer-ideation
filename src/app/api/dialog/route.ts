@@ -9,17 +9,17 @@ export const runtime = "edge";
 const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const DONE_MESSAGE = "Bra — jag har nog nu. Analyserar idén.";
-const MAX_HISTORY_MESSAGES = 2;
-const MAX_MESSAGE_CHARS = 180;
+const MAX_CONTEXT_MESSAGES = 8;
+const MAX_CONTEXT_MESSAGE_CHARS = 320;
 const GEMINI_TIMEOUT_MS = 10000;
 const GEMINI_LOOP_ERROR = "Fel i Gemini-loopen";
 const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
-const MAX_FINAL_QUESTION_CHARS = 500;
+const MAX_FINAL_QUESTION_CHARS = 1200;
 
 const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
 Persona:
-- Intellektuell, skarp och analytisk.
+- Vänlig, nyfiken och skarp.
 - Krävande i sak, aldrig hostil.
 - Tänk som en kritiker som vill testa om idén faktiskt håller.
 
@@ -30,11 +30,19 @@ Syfte:
 - Undvik abstrakta omformuleringar av användarens ord.
 - Parafrasera inte, spegla inte, och återanvänd inte nyckelord från idén eller senaste svaret om det går att undvika.
 
+Rotationsregel:
+- Om ett hinder, en risk eller en säkerhetsfråga redan har fått ett svar, lämna den axeln.
+- Stanna inte i samma tema flera turer i rad.
+- Aldrig tre frågor i rad som betyder samma sak som "Vad förhindrar..." eller "Vad hindrar...".
+- När ett sådant spår är besvarat, byt omedelbart till en annan dimension av idén: ritual, estetik, litterärt värde, användarupplevelse, distribution, social energi, format, eller ekonomi.
+- Om dialogen nyss har kretsat kring security/copying, fortsätt inte att pressa just det spåret; gå vidare till hur idén känns, används, ser ut, cirkulerar eller blir minnesvärd.
+
 Stilregler:
 - Variera meningslängd och satsrytm.
 - Undvik generiska mallfrågor som börjar med "Hur upplever...", "Vad får...", "På vilket sätt..." om de inte är tydligt motiverade av kontexten.
 - Frågan ska kännas som att den försöker spräcka en illusion, inte bekräfta den.
 - Föredra konkreta frågor om exekvering, krockar, beroenden, målgruppens faktiska beteende och misslyckandepunkter.
+- När säkerhetsfrågan är mättad, gå vidare till ritual, estetik eller litterärt värde istället för att återvända till blockeraren.
 - Om idén är vag, gå på definitioner, gränser och antaganden. Om den är ambitiös, gå på resurser, distribution, tid och reala hinder.
 
 Format:
@@ -74,14 +82,23 @@ function trimToWordBoundary(text: string, limit: number): string {
   return sliced.slice(0, lastSpace).trim();
 }
 
+function stripTrailingClippingMarks(text: string): string {
+  return text.replace(/[\s,;:\-—]+$/u, "").trim();
+}
+
 function finalizeQuestion(question: string): string {
   const normalized = stripEchoes(question);
   if (!normalized) return "";
   if (normalized === DONE_MESSAGE) return normalized;
 
+  const wasClipped = normalized.length > MAX_FINAL_QUESTION_CHARS;
   const safeText = trimToWordBoundary(normalized, MAX_FINAL_QUESTION_CHARS);
-  const trimmed = safeText.trim();
-  return /[?.!]$/.test(trimmed) ? trimmed : `${trimmed}?`;
+  const cleaned = stripTrailingClippingMarks(safeText);
+  if (!cleaned) return "";
+
+  if (/[?.!]$/.test(cleaned)) return cleaned;
+  if (wasClipped) return cleaned;
+  return `${cleaned}?`;
 }
 
 function plainTextResponse(text: string, status = 200) {
@@ -91,20 +108,17 @@ function plainTextResponse(text: string, status = 200) {
   });
 }
 
-function truncateText(text: string, limit = MAX_MESSAGE_CHARS) {
+function truncateText(text: string, limit = MAX_CONTEXT_MESSAGE_CHARS) {
   const normalized = normalizeText(text);
   if (normalized.length <= limit) return normalized;
   return `${normalized.slice(0, limit - 1)}…`;
 }
 
 function buildHistoryContents(history: DialogMessage[]) {
-  return history
-    .filter((m) => m.role === "user")
-    .slice(-MAX_HISTORY_MESSAGES)
-    .map((m) => ({
-      role: "user",
-      parts: [{ text: truncateText(m.text) }],
-    }));
+  return history.slice(-MAX_CONTEXT_MESSAGES).map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: truncateText(m.text) }],
+  }));
 }
 
 export async function GET() {
@@ -133,7 +147,7 @@ export async function POST(req: NextRequest) {
   const userMessage =
     turnNumber === 0
       ? `Ide: ${truncateText(idea, 700)}\nStäll en kort, skarp följdfråga.`
-      : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny fråga utifrån senaste svaret.`;
+      : `TurnNumber: ${turnNumber + 1}. Fortsätt med en ny fråga utifrån senaste svaret, men byt axel om ett spår redan är mättat.`;
 
   const contents = [...historyContents, { role: "user", parts: [{ text: userMessage }] }];
 
