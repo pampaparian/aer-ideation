@@ -14,6 +14,7 @@ const MAX_MESSAGE_CHARS = 180;
 const GEMINI_TIMEOUT_MS = 10000;
 const GEMINI_LOOP_ERROR = "Fel i Gemini-loopen";
 const GEMINI_TIMEOUT_ERROR = "Lager 1: Timeout";
+const MAX_FINAL_QUESTION_CHARS = 500;
 
 const SYSTEM_PROMPT = `Du är Dialog-DNA i Aer Ideation.
 
@@ -65,13 +66,21 @@ function stripEchoes(text: string): string {
   return normalized;
 }
 
+function trimToWordBoundary(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+  const sliced = text.slice(0, limit);
+  const lastSpace = sliced.lastIndexOf(" ");
+  if (lastSpace <= 0) return sliced.trim();
+  return sliced.slice(0, lastSpace).trim();
+}
+
 function finalizeQuestion(question: string): string {
   const normalized = stripEchoes(question);
   if (!normalized) return "";
   if (normalized === DONE_MESSAGE) return normalized;
-  const max = 220;
-  const sliced = normalized.length <= max ? normalized : normalized.slice(0, max);
-  const trimmed = sliced.trim();
+
+  const safeText = trimToWordBoundary(normalized, MAX_FINAL_QUESTION_CHARS);
+  const trimmed = safeText.trim();
   return /[?.!]$/.test(trimmed) ? trimmed : `${trimmed}?`;
 }
 
