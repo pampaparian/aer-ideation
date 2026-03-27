@@ -21,21 +21,11 @@ export default function Home() {
   const [result, setResult] = useState<BlankettType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForQuestion, setIsWaitingForQuestion] = useState(false);
-  const [isSlowQuestion, setIsSlowQuestion] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history, currentQuestion, isWaitingForQuestion, isSlowQuestion]);
-
-  useEffect(() => {
-    if (!isWaitingForQuestion) {
-      setIsSlowQuestion(false);
-      return;
-    }
-    const timer = setTimeout(() => setIsSlowQuestion(true), 2500);
-    return () => clearTimeout(timer);
-  }, [isWaitingForQuestion]);
+  }, [history, currentQuestion, isWaitingForQuestion]);
 
   async function handleStartDialog() {
     if (!idea.trim()) return;
@@ -57,15 +47,31 @@ export default function Home() {
         body: JSON.stringify({ idea, history: hist, turnNumber: turn }),
       });
       const text = await res.text();
-      if (!res.ok) throw new Error(text || "Dialog-API svarade inte");
-      const question = text.trim();
-      setCurrentQuestion(question);
+      const trimmed = text.trim();
+
+      if (!res.ok) {
+        setError(trimmed || "Fel i Gemini-loopen");
+        setCurrentQuestion("");
+        setPhase("result");
+        return;
+      }
+
+      if (!trimmed) {
+        setError("Fel i Gemini-loopen");
+        setCurrentQuestion("");
+        setPhase("result");
+        return;
+      }
+
+      setCurrentQuestion(trimmed);
       setTurnNumber(turn + 1);
-      if (question === DONE_MESSAGE) {
+      if (trimmed === DONE_MESSAGE) {
         setTimeout(() => startAnalysis(hist), 1200);
       }
-    } catch {
-      setError("Något gick fel i dialogfasen. Försök igen.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fel i Gemini-loopen");
+      setCurrentQuestion("");
+      setPhase("result");
     } finally {
       setIsWaitingForQuestion(false);
     }
@@ -124,7 +130,6 @@ export default function Home() {
     setResult(null);
     setError(null);
     setIsWaitingForQuestion(false);
-    setIsSlowQuestion(false);
   }
 
   return (
@@ -185,11 +190,6 @@ export default function Home() {
             {currentQuestion && (
               <div className={styles.chatBubbleAI}>
                 {currentQuestion}
-              </div>
-            )}
-            {isSlowQuestion && isWaitingForQuestion && (
-              <div className={styles.chatBubbleAI}>
-                Tänker lite längre än vanligt — jag använder en snabb stödföljdfråga om det behövs.
               </div>
             )}
             <div ref={chatBottomRef} />
