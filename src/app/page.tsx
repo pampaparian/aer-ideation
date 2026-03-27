@@ -25,7 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history, currentQuestion, isWaitingForQuestion]);
+  }, [history, currentQuestion]);
 
   async function handleStartDialog() {
     if (!idea.trim()) return;
@@ -66,7 +66,7 @@ export default function Home() {
       setCurrentQuestion(trimmed);
       setTurnNumber(turn + 1);
       if (trimmed === DONE_MESSAGE) {
-        setTimeout(() => startAnalysis(hist), 1200);
+        void startAnalysis(hist);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Fel i Gemini-loopen");
@@ -180,13 +180,6 @@ export default function Home() {
                 {turn.text}
               </div>
             ))}
-            {isWaitingForQuestion && !currentQuestion && (
-              <div className={`${styles.chatBubbleAI} ${styles.thinking}`}>
-                <span className={styles.dot} />
-                <span className={styles.dot} />
-                <span className={styles.dot} />
-              </div>
-            )}
             {currentQuestion && (
               <div className={styles.chatBubbleAI}>
                 {currentQuestion}
